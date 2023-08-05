@@ -37,7 +37,10 @@ export const InputContainer = styled.div`
 export const MapContainer = styled.div`
   svg {
     border: 1px solid #fff;
-    max-width: 800px;
     width: 100%;
+    text {
+      fill: #000;
+      font: 12px sans-serif;
+    }
   }
 `;

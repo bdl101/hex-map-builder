@@ -11,6 +11,23 @@ const DEFAULT_ROW_COUNT = 3;
 const DEFAULT_COLUMN_COUNT = 4;
 const DEFAULT_HEX_RADIUS = 50;
 
+// [A-Z]
+const UPPER_ALPHA_INDICES = Array.from(Array(26)).map((e, i) => i + 65);
+
+interface HexMapConfig {
+  rowCount: number;
+  columnCount: number;
+  hexRadius: number;
+}
+
+interface HexLabelData {
+  x: number;
+  y: number;
+  label: string;
+}
+
+type ConfigKey = keyof HexMapConfig;
+
 type Vertices = Array<[number, number]>;
 
 /** Get the vertices for a hexagon centered at origin point x,y. The distance between any 2 vertices of the hexagon is 2r. */
@@ -34,12 +51,26 @@ const getSinglePath = (vertices: Vertices) => {
   }, `M ${vertices[5][0]} ${vertices[5][1]} `);
 };
 
+const prepareHexLabelData = (
+  vertices: Vertices,
+  columnIndex: number,
+  rowIndex: number,
+  hexRadius: number
+): HexLabelData => {
+  return {
+    x: vertices[4][0] + hexRadius / 10,
+    y: vertices[4][1] + hexRadius / 5,
+    label: `${columnIndex},${rowIndex}`,
+  };
+};
+
 const getVectorPaths = (
   columnCount: number,
   rowCount: number,
   hexagonRadius: number
-): string[] => {
+): { paths: string[]; labelData: HexLabelData[] } => {
   const paths: string[] = [];
+  const labelData: HexLabelData[] = [];
   for (let j = 0; j < rowCount; j++) {
     const columnOffset = hexagonRadius - hexagonRadius * Math.sin(ANGLE);
     const yCoordinate = hexagonRadius + 1.5 * j * hexagonRadius;
@@ -51,20 +82,14 @@ const getVectorPaths = (
         (j % 2) * (hexagonRadius - columnOffset);
       const vertices = getVertices(xCoordinate, yCoordinate, hexagonRadius);
       const path = getSinglePath(vertices);
+      const labelDataPoint = prepareHexLabelData(vertices, i, j, hexagonRadius);
       paths.push(path);
+      labelData.push(labelDataPoint);
     }
   }
 
-  return paths;
+  return { paths, labelData };
 };
-
-interface HexMapConfig {
-  rowCount: number;
-  columnCount: number;
-  hexRadius: number;
-}
-
-type ConfigKey = keyof HexMapConfig;
 
 const App = () => {
   const [config, setConfig] = useState<HexMapConfig>({
@@ -73,16 +98,29 @@ const App = () => {
     hexRadius: DEFAULT_HEX_RADIUS,
   });
 
-  const handleConfigChange = (configKey: ConfigKey, newValue: number) => {
-    setConfig({ ...config, [configKey]: newValue });
+  const handleConfigChange = (configKey: ConfigKey, newValue: string) => {
+    setConfig({ ...config, [configKey]: Number(newValue) });
   };
 
-  const paths = useMemo(() => {
+  const { paths, labelData } = useMemo(() => {
     return getVectorPaths(
       config.columnCount,
       config.rowCount,
       config.hexRadius
     );
+  }, [config]);
+
+  const mapViewBox = useMemo(() => {
+    const { rowCount, columnCount, hexRadius } = config;
+    const columnOffset = hexRadius - hexRadius * Math.sin(ANGLE);
+    const maxWidth =
+      2 * columnCount * hexRadius -
+      columnCount * 2 * columnOffset +
+      columnOffset +
+      (hexRadius - columnOffset) +
+      1;
+    const maxHeight = hexRadius / 2 + 1.5 * rowCount * hexRadius;
+    return `0 0 ${maxWidth} ${maxHeight}`;
   }, [config]);
 
   return (
@@ -94,11 +132,10 @@ const App = () => {
             id="row-controls"
             type="number"
             placeholder="3"
-            min={1}
+            min={2}
             value={config.rowCount}
             onChange={(e) => {
-              console.log(e.target.value);
-              // handleConfigChange('rowCount', (e.target.value))
+              handleConfigChange("rowCount", e.target.value);
             }}
           />
         </InputContainer>
@@ -108,8 +145,11 @@ const App = () => {
             id="column-controls"
             type="number"
             placeholder="4"
-            min={1}
+            min={2}
             value={config.columnCount}
+            onChange={(e) => {
+              handleConfigChange("columnCount", e.target.value);
+            }}
           />
         </InputContainer>
         <InputContainer>
@@ -120,23 +160,28 @@ const App = () => {
             placeholder="50"
             min={1}
             value={config.hexRadius}
+            onChange={(e) => {
+              handleConfigChange("hexRadius", e.target.value);
+            }}
           />
         </InputContainer>
       </Controls>
       <MapContainer>
-        <svg viewBox="0 0 400 400">
+        <svg viewBox={mapViewBox}>
           {paths.map((path, index) => (
-            <path
-              key={index}
-              d={path}
-              fill="#666"
-              stroke="white"
-              strokeWidth="1"
-            />
+            <g>
+              <path
+                key={index}
+                d={path}
+                fill="#aaa"
+                stroke="#000"
+                strokeWidth="1"
+              />
+              <text x={labelData[index].x} y={labelData[index].y}>
+                {labelData[index].label}
+              </text>
+            </g>
           ))}
-          <text x="6" y="74">
-            Start
-          </text>
         </svg>
       </MapContainer>
     </MainContainer>
