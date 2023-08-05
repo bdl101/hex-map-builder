@@ -1,8 +1,27 @@
 import styled from "@emotion/styled";
+import { css } from "@emotion/react";
+
+export const GLOBAL_STYLES = css`
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    font-size: 16px;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    font-size: 1rem;
+    font-family: sans-serif;
+  }
+`;
 
 export const MainContainer = styled.main`
   background-color: #282c34;
-  font-family: sans-serif;
   margin: 0;
   min-height: 100vh;
   padding: 2rem;
@@ -10,24 +29,34 @@ export const MainContainer = styled.main`
 
 export const Controls = styled.div`
   display: flex;
+  flex-wrap: wrap;
 `;
 
 export const InputContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+  margin-right: 1rem;
+  width: 160px;
   label {
     color: #fff;
     display: block;
     font-size: 0.875rem;
     margin-bottom: 4px;
+    width: 100%;
   }
   input,
-  select {
+  select,
+  button {
     background: #fff;
     border: 1px solid #ccc;
+    border-radius: 0;
     height: 32px;
-    margin-bottom: 1rem;
-    margin-right: 1rem;
+    margin: 0;
     outline: none;
-    width: 160px;
+    padding: 0.25rem;
+    width: 100%;
     &:focus {
       border-color: blue;
     }
@@ -35,8 +64,9 @@ export const InputContainer = styled.div`
 `;
 
 export const MapContainer = styled.div`
+  background: #fff;
+  border: 1px solid #000;
   svg {
-    border: 1px solid #fff;
     width: 100%;
     text {
       fill: #000;

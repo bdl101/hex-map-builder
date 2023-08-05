@@ -1,188 +1,246 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
+import { Global } from "@emotion/react";
+
 import {
+  HexMapConfig,
+  ConfigKey,
+  LabelFormatOption,
+  HexOrientationOption,
+  HexFillColor,
+} from "./models";
+import {
+  DEFAULT_COLUMN_COUNT,
+  DEFAULT_HEX_RADIUS,
+  DEFAULT_ROW_COUNT,
+} from "./constants";
+import { prepareVectorData, prepareViewbox } from "./utils";
+
+import {
+  GLOBAL_STYLES,
   InputContainer,
   MainContainer,
   MapContainer,
   Controls,
 } from "./App.styles";
 
-const ANGLE = (2 * Math.PI) / 6;
-const DEFAULT_ROW_COUNT = 3;
-const DEFAULT_COLUMN_COUNT = 4;
-const DEFAULT_HEX_RADIUS = 50;
-
-// [A-Z]
-const UPPER_ALPHA_INDICES = Array.from(Array(26)).map((e, i) => i + 65);
-
-interface HexMapConfig {
-  rowCount: number;
-  columnCount: number;
-  hexRadius: number;
-}
-
-interface HexLabelData {
-  x: number;
-  y: number;
-  label: string;
-}
-
-type ConfigKey = keyof HexMapConfig;
-
-type Vertices = Array<[number, number]>;
-
-/** Get the vertices for a hexagon centered at origin point x,y. The distance between any 2 vertices of the hexagon is 2r. */
-const getVertices = (x: number, y: number, r: number) => {
-  const vertices: Vertices = [];
-  for (var i = 0; i < 6; i++) {
-    const xCoordinate = x + r * Math.sin(ANGLE * i);
-    const yCoordinate = y + r * Math.cos(ANGLE * i);
-    vertices.push([xCoordinate, yCoordinate]);
-  }
-  return vertices;
-};
-
-const getSinglePath = (vertices: Vertices) => {
-  return vertices.reduce((accumulator, currentValue, index) => {
-    accumulator +=
-      index === vertices.length - 1
-        ? ` Z`
-        : ` L ${currentValue[0]} ${currentValue[1]}`;
-    return accumulator;
-  }, `M ${vertices[5][0]} ${vertices[5][1]} `);
-};
-
-const prepareHexLabelData = (
-  vertices: Vertices,
-  columnIndex: number,
-  rowIndex: number,
-  hexRadius: number
-): HexLabelData => {
-  // TODO: letter as x coordinate
-  return {
-    x: vertices[4][0] + hexRadius / 10,
-    y: vertices[4][1] + hexRadius / 5,
-    label: `${columnIndex},${rowIndex}`,
-  };
-};
-
-const getVectorPaths = (
-  columnCount: number,
-  rowCount: number,
-  hexagonRadius: number
-): { paths: string[]; labelData: HexLabelData[] } => {
-  const paths: string[] = [];
-  const labelData: HexLabelData[] = [];
-  for (let j = 0; j < rowCount; j++) {
-    const columnOffset = hexagonRadius - hexagonRadius * Math.sin(ANGLE);
-    const yCoordinate = hexagonRadius + 1.5 * j * hexagonRadius;
-    for (let i = 0; i < columnCount; i++) {
-      const xCoordinate =
-        hexagonRadius +
-        2 * i * hexagonRadius -
-        2 * i * columnOffset +
-        (j % 2) * (hexagonRadius - columnOffset);
-      const vertices = getVertices(xCoordinate, yCoordinate, hexagonRadius);
-      const path = getSinglePath(vertices);
-      const labelDataPoint = prepareHexLabelData(vertices, i, j, hexagonRadius);
-      paths.push(path);
-      labelData.push(labelDataPoint);
-    }
-  }
-
-  return { paths, labelData };
-};
-
 const App = () => {
+  const hexMapRef = useRef<SVGSVGElement>(null);
+
+  const [pointerIsDown, setPointerIsDown] = useState(false);
   const [config, setConfig] = useState<HexMapConfig>({
     rowCount: DEFAULT_ROW_COUNT,
     columnCount: DEFAULT_COLUMN_COUNT,
     hexRadius: DEFAULT_HEX_RADIUS,
+    paintFill: "transparent",
+    labelFormat: "none",
+    hexOrientation: "pointTop",
+    hexFills: {},
   });
 
-  const handleConfigChange = (configKey: ConfigKey, newValue: string) => {
-    setConfig({ ...config, [configKey]: Number(newValue) });
+  const { paths, labelData } = useMemo(() => {
+    return prepareVectorData(config);
+  }, [config]);
+
+  const mapDimensions = useMemo(() => {
+    return prepareViewbox(config);
+  }, [config]);
+
+  const handleConfigChange = (
+    configKey: ConfigKey,
+    newValue: HexMapConfig[ConfigKey]
+  ) => {
+    setConfig({ ...config, [configKey]: newValue });
   };
 
-  const { paths, labelData } = useMemo(() => {
-    return getVectorPaths(
-      config.columnCount,
-      config.rowCount,
-      config.hexRadius
-    );
-  }, [config]);
+  const handleHexPress = (hexKey: number) => {
+    if (!pointerIsDown) {
+      setPointerIsDown(true);
+    }
+    if (config.hexFills[hexKey] !== config.paintFill) {
+      setConfig({
+        ...config,
+        hexFills: { ...config.hexFills, [hexKey]: config.paintFill },
+      });
+    }
+  };
 
-  const mapViewBox = useMemo(() => {
-    const { rowCount, columnCount, hexRadius } = config;
-    const columnOffset = hexRadius - hexRadius * Math.sin(ANGLE);
-    const maxWidth =
-      2 * columnCount * hexRadius -
-      columnCount * 2 * columnOffset +
-      columnOffset +
-      (hexRadius - columnOffset) +
-      1;
-    const maxHeight = hexRadius / 2 + 1.5 * rowCount * hexRadius;
-    return `0 0 ${maxWidth} ${maxHeight}`;
-  }, [config]);
+  const handleHexDrag = (hexKey: number) => {
+    if (pointerIsDown && config.hexFills[hexKey] !== config.paintFill) {
+      setConfig({
+        ...config,
+        hexFills: { ...config.hexFills, [hexKey]: config.paintFill },
+      });
+    }
+  };
 
-  // TODO: control for label style: number, letter as xcoord, none
-  // TODO: controls for hex orientation: 'flat-top'| 'point-top'
+  const handleConvertToPNG = () => {
+    const svgElement = hexMapRef.current;
+    if (svgElement) {
+      const svgURL = new XMLSerializer().serializeToString(svgElement);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = mapDimensions.maxWidth;
+      canvas.height = mapDimensions.maxHeight;
+      const context = canvas.getContext("2d");
+
+      var img = new Image();
+      img.onload = () => {
+        context?.drawImage(img, 0, 0);
+        const pngURL = canvas?.toDataURL("image/png");
+        console.log(pngURL);
+        var newTab = window.open("about:blank", "image from canvas");
+        newTab?.document.write("<img src='" + pngURL + "' alt='from canvas'/>");
+      };
+      img.src =
+        "data:image/svg+xml; charset=utf8, " + encodeURIComponent(svgURL);
+    }
+  };
 
   return (
-    <MainContainer>
-      <Controls>
-        <InputContainer>
-          <label htmlFor="row-controls">Rows</label>
-          <input
-            id="row-controls"
-            type="number"
-            placeholder="3"
-            min={2}
-            value={config.rowCount}
-            onChange={(e) => {
-              handleConfigChange("rowCount", e.target.value);
-            }}
-          />
-        </InputContainer>
-        <InputContainer>
-          <label htmlFor="column-controls">Columns</label>
-          <input
-            id="column-controls"
-            type="number"
-            placeholder="4"
-            min={2}
-            value={config.columnCount}
-            onChange={(e) => {
-              handleConfigChange("columnCount", e.target.value);
-            }}
-          />
-        </InputContainer>
-        <InputContainer>
-          <label htmlFor="radius-controls">Hexagon Radius</label>
-          <input
-            id="radius-controls"
-            type="number"
-            placeholder="50"
-            min={1}
-            value={config.hexRadius}
-            onChange={(e) => {
-              handleConfigChange("hexRadius", e.target.value);
-            }}
-          />
-        </InputContainer>
-      </Controls>
-      <MapContainer>
-        <svg viewBox={mapViewBox}>
-          {paths.map((path, index) => (
-            <g key={index}>
-              <path d={path} fill="#aaa" stroke="#000" strokeWidth="1" />
-              <text x={labelData[index].x} y={labelData[index].y}>
-                {labelData[index].label}
-              </text>
-            </g>
-          ))}
-        </svg>
-      </MapContainer>
-    </MainContainer>
+    <>
+      <Global styles={GLOBAL_STYLES} />
+      <MainContainer
+        onMouseUp={() => {
+          setPointerIsDown(false);
+        }}
+        onTouchEnd={() => {
+          setPointerIsDown(false);
+        }}
+      >
+        <Controls>
+          <InputContainer>
+            <label htmlFor="row-controls">Rows</label>
+            <input
+              id="row-controls"
+              type="number"
+              placeholder="3"
+              min={2}
+              value={config.rowCount}
+              onChange={(e) => {
+                handleConfigChange("rowCount", Number(e.target.value));
+              }}
+            />
+          </InputContainer>
+          <InputContainer>
+            <label htmlFor="column-controls">Columns</label>
+            <input
+              id="column-controls"
+              type="number"
+              placeholder="4"
+              min={2}
+              value={config.columnCount}
+              onChange={(e) => {
+                handleConfigChange("columnCount", Number(e.target.value));
+              }}
+            />
+          </InputContainer>
+          <InputContainer>
+            <label htmlFor="radius-controls">Hexagon Radius</label>
+            <input
+              id="radius-controls"
+              type="number"
+              placeholder="50"
+              min={1}
+              value={config.hexRadius}
+              onChange={(e) => {
+                handleConfigChange("hexRadius", Number(e.target.value));
+              }}
+            />
+          </InputContainer>
+          <InputContainer>
+            <label htmlFor="paint-fill-controls">Paint Color</label>
+            <select
+              id="paint-fill-controls"
+              value={config.paintFill}
+              onChange={(e) => {
+                handleConfigChange("paintFill", e.target.value as HexFillColor);
+              }}
+            >
+              <option value={"transparent"}>None</option>
+              <option value={"ivory"}>Desert</option>
+              <option value={"grey"}>City</option>
+              <option value={"red"}>Lava</option>
+              <option value={"brown"}>Mountain</option>
+              <option value={"darkcyan"}>Swamp</option>
+            </select>
+          </InputContainer>
+          <InputContainer>
+            <label htmlFor="label-format-controls">Label Format</label>
+            <select
+              id="label-format-controls"
+              value={config.labelFormat}
+              onChange={(e) => {
+                handleConfigChange(
+                  "labelFormat",
+                  e.target.value as LabelFormatOption
+                );
+              }}
+            >
+              <option value={"none"}>None</option>
+              <option value={"numbersOnly"}>Numbers Only</option>
+              <option value={"alphaX"}>Alphabetical X Coordinate</option>
+            </select>
+          </InputContainer>
+          <InputContainer>
+            <label htmlFor="hex-orientation-controls">
+              Hexagon Orientation
+            </label>
+            <select
+              id="hex-orientation-controls"
+              value={config.hexOrientation}
+              onChange={(e) => {
+                handleConfigChange(
+                  "hexOrientation",
+                  e.target.value as HexOrientationOption
+                );
+              }}
+            >
+              <option value={"pointTop"}>Pointed Tops</option>
+              <option value={"flatTop"}>Flat Tops</option>
+            </select>
+          </InputContainer>
+          <InputContainer>
+            <button type="button" onClick={handleConvertToPNG}>
+              Convert to PNG
+            </button>
+          </InputContainer>
+        </Controls>
+        <MapContainer>
+          <svg
+            ref={hexMapRef}
+            viewBox={mapDimensions.viewBox}
+            width={mapDimensions.maxWidth}
+            height={mapDimensions.maxHeight}
+          >
+            {paths.map((path, index) => (
+              <g key={index}>
+                <path
+                  d={path}
+                  fill={config.hexFills[index] || "transparent"}
+                  stroke="#000"
+                  strokeWidth="1"
+                  onMouseDown={() => {
+                    handleHexPress(index);
+                  }}
+                  onMouseOver={() => {
+                    handleHexDrag(index);
+                  }}
+                  onTouchStart={() => {
+                    handleHexPress(index);
+                  }}
+                  onTouchMove={() => {
+                    handleHexDrag(index);
+                  }}
+                />
+                <text x={labelData[index].x} y={labelData[index].y}>
+                  {labelData[index].label}
+                </text>
+              </g>
+            ))}
+          </svg>
+        </MapContainer>
+      </MainContainer>
+    </>
   );
 };
 
