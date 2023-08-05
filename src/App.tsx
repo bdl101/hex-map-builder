@@ -7,6 +7,7 @@ import {
   LabelFormatOption,
   HexOrientationOption,
   HexFillColor,
+  ImageFormatOption,
 } from "./models";
 import {
   DEFAULT_COLUMN_COUNT,
@@ -23,6 +24,10 @@ import {
   Controls,
 } from "./App.styles";
 
+const foo = URL.createObjectURL(
+  new Blob([JSON.stringify({ foo: "bar" })], { type: "application/json" })
+);
+
 const App = () => {
   const hexMapRef = useRef<SVGSVGElement>(null);
 
@@ -35,6 +40,7 @@ const App = () => {
     labelFormat: "none",
     hexOrientation: "pointTop",
     hexFills: {},
+    imageFormat: "contained",
   });
 
   const { paths, labelData } = useMemo(() => {
@@ -107,6 +113,9 @@ const App = () => {
           setPointerIsDown(false);
         }}
       >
+        <a href={foo} download={"foo.json"}>
+          Download foo
+        </a>
         <Controls>
           <InputContainer>
             <label htmlFor="row-controls">Rows</label>
@@ -200,12 +209,46 @@ const App = () => {
             </select>
           </InputContainer>
           <InputContainer>
+            <label htmlFor="hex-orientation-controls">
+              Hexagon Orientation
+            </label>
+            <select
+              id="hex-orientation-controls"
+              value={config.hexOrientation}
+              onChange={(e) => {
+                handleConfigChange(
+                  "hexOrientation",
+                  e.target.value as HexOrientationOption
+                );
+              }}
+            >
+              <option value={"pointTop"}>Pointed Tops</option>
+              <option value={"flatTop"}>Flat Tops</option>
+            </select>
+          </InputContainer>
+          <InputContainer>
+            <label htmlFor="image-format-controls">Canvas Format</label>
+            <select
+              id="image-format-controls"
+              value={config.imageFormat}
+              onChange={(e) => {
+                handleConfigChange(
+                  "imageFormat",
+                  e.target.value as ImageFormatOption
+                );
+              }}
+            >
+              <option value={"contained"}>Contained</option>
+              <option value={"fixed"}>Fixed</option>
+            </select>
+          </InputContainer>
+          <InputContainer>
             <button type="button" onClick={handleConvertToPNG}>
               Convert to PNG
             </button>
           </InputContainer>
         </Controls>
-        <MapContainer>
+        <MapContainer isContained={config.imageFormat === "contained"}>
           <svg
             ref={hexMapRef}
             viewBox={mapDimensions.viewBox}

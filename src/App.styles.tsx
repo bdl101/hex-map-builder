@@ -63,11 +63,13 @@ export const InputContainer = styled.div`
   }
 `;
 
-export const MapContainer = styled.div`
+export const MapContainer = styled.div<{ isContained?: boolean }>`
   background: #fff;
   border: 1px solid #000;
+  max-width: 100%;
+  overflow: auto;
   svg {
-    width: 100%;
+    max-width: ${({ isContained }) => (isContained ? "100%" : "unset")};
     text {
       fill: #000;
       font: 12px sans-serif;
