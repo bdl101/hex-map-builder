@@ -57,6 +57,7 @@ const prepareHexLabelData = (
   rowIndex: number,
   hexRadius: number
 ): HexLabelData => {
+  // TODO: letter as x coordinate
   return {
     x: vertices[4][0] + hexRadius / 10,
     y: vertices[4][1] + hexRadius / 5,
@@ -123,6 +124,9 @@ const App = () => {
     return `0 0 ${maxWidth} ${maxHeight}`;
   }, [config]);
 
+  // TODO: control for label style: number, letter as xcoord, none
+  // TODO: controls for hex orientation: 'flat-top'| 'point-top'
+
   return (
     <MainContainer>
       <Controls>
@@ -169,14 +173,8 @@ const App = () => {
       <MapContainer>
         <svg viewBox={mapViewBox}>
           {paths.map((path, index) => (
-            <g>
-              <path
-                key={index}
-                d={path}
-                fill="#aaa"
-                stroke="#000"
-                strokeWidth="1"
-              />
+            <g key={index}>
+              <path d={path} fill="#aaa" stroke="#000" strokeWidth="1" />
               <text x={labelData[index].x} y={labelData[index].y}>
                 {labelData[index].label}
               </text>
