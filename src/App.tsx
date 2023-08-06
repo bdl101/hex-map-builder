@@ -354,6 +354,69 @@ const App = () => {
                 </text>
               </g>
             ))}
+            {/* Hills */}
+            {/* <path
+              d="M 25 60 C 32 40, 48 40, 55 60 M 50 48 C 58 38, 70 40, 75 54"
+              stroke="black"
+              strokeWidth={3}
+              fill="transparent"
+              opacity={0.3}
+              rx={2}
+            /> */}
+
+            {/* Water */}
+            {/* <path
+              d="M 25 40 C 46 25, 52 55, 75 40 M 25 60 C 46 45, 52 75, 75 60"
+              stroke="black"
+              strokeWidth={3}
+              fill="transparent"
+              opacity={0.5}
+              rx={2}
+            /> */}
+
+            {/* Mountain */}
+            {/* <path
+              d="M 25 65 L 38 40 L 44 50 L 54 25 L 70 65 Z"
+              stroke="black"
+              strokeWidth={3}
+              fill="transparent"
+              opacity={0.3}
+              rx={5}
+            /> */}
+
+            {/* Tundra */}
+            {/* <path
+              d="M 32 49 L 68 49 M 49 32 L 49 68 M 39 39 L 59 59 M 59 39 L 39 59"
+              stroke="black"
+              strokeWidth={2}
+              fill="transparent"
+              opacity={0.3}
+              rx={2}
+            /> */}
+
+            {/* Swamp */}
+            {/* {
+              <path
+                d="M 49 70 L 49 30 M 35 45 L 49 30 L 63 45 M 35 55 L 49 40 L 63 55"
+                stroke="black"
+                strokeWidth={2}
+                fill="transparent"
+                opacity={0.3}
+                rx={2}
+              />
+            } */}
+
+            {/* Forest */}
+
+            {/* Volcanic */}
+            {/* <path
+              d="M 34 42 L 48 35 L 65 40 L 71 54 L 65 62 L 51 68 L 40 63 L 32 51 Z M 48 35 L 47 45 L 55 55 L 51 68"
+              stroke="black"
+              strokeWidth={2}
+              fill="transparent"
+              opacity={0.3}
+              rx={2}
+            /> */}
           </svg>
         </MapContainer>
       </MainContainer>
