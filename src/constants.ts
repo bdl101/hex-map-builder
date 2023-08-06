@@ -9,7 +9,7 @@ export const DEFAULT_HEXMAP_CONFIG: HexMapConfig = {
   rowCount: DEFAULT_ROW_COUNT,
   columnCount: DEFAULT_COLUMN_COUNT,
   hexRadius: DEFAULT_HEX_RADIUS,
-  paintFill: "transparent",
+  paintColor: "transparent",
   paintType: "brush",
   labelFormat: "none",
   hexOrientation: "pointTop",

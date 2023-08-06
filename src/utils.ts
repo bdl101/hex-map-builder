@@ -1,13 +1,14 @@
+import { SetStateAction, Dispatch } from "react";
 import {
   Vertices,
   HexLabelData,
   HexMapConfig,
   LabelFormatOption,
+  HexFills,
 } from "./models";
 import { ANGLE, UPPER_ALPHA_INDICES } from "./constants";
 
 // TODO: support flat-top orientation
-// TODO: support paint bucket painting
 
 /** Get the vertices for a hexagon centered at origin point x,y. The distance between any 2 vertices of the hexagon is 2r. */
 const prepareVertices = (x: number, y: number, r: number) => {
@@ -78,6 +79,7 @@ export const prepareViewbox = (config: HexMapConfig) => {
   return { maxWidth, maxHeight, viewBox: `0 0 ${maxWidth} ${maxHeight}` };
 };
 
+// TODO: Terrain Icons
 /** Get all vector data needed to output a hexmap. */
 export const prepareVectorData = (
   config: HexMapConfig
@@ -110,4 +112,107 @@ export const prepareVectorData = (
   }
 
   return { paths, labelData };
+};
+
+/** Given a particular hex and new color, set the color of each connected hex with the same original color. */
+export const paintBucket = (
+  config: HexMapConfig,
+  setConfig: Dispatch<SetStateAction<HexMapConfig>>,
+  hexKey: number
+) => {
+  const startNodeOriginalPaintColor = config.hexFills[hexKey];
+  const clearedNodes = new Set<number>();
+  const nodesToClear = new Set<number>();
+
+  const traverseHexTree = (currentNodeKey: number) => {
+    clearedNodes.add(currentNodeKey);
+
+    const columnStartIndex =
+      Math.floor(currentNodeKey / config.columnCount) * config.columnCount;
+    const columnEndIndex = columnStartIndex + config.columnCount - 1;
+
+    const leftAdjacentNode = Math.max(currentNodeKey - 1, columnStartIndex);
+    const rightAdjacentNode = Math.min(currentNodeKey + 1, columnEndIndex);
+
+    const traversalTree: number[] = [leftAdjacentNode, rightAdjacentNode];
+
+    const isEvenRow = Math.floor(currentNodeKey / config.columnCount) % 2 === 0;
+
+    let topLeftNode: number | undefined = undefined;
+    if (isEvenRow && currentNodeKey !== columnStartIndex) {
+      topLeftNode = currentNodeKey - (config.columnCount + 1);
+    } else if (!isEvenRow) {
+      topLeftNode = currentNodeKey - config.columnCount;
+    }
+    if (topLeftNode !== undefined && topLeftNode >= 0) {
+      traversalTree.push(topLeftNode);
+    }
+
+    let topRightNode: number | undefined = undefined;
+    if (!isEvenRow && currentNodeKey !== columnEndIndex) {
+      topRightNode = currentNodeKey - (config.columnCount - 1);
+    } else if (isEvenRow) {
+      topRightNode = currentNodeKey - config.columnCount;
+    }
+    if (topRightNode !== undefined && topRightNode >= 0) {
+      traversalTree.push(topRightNode);
+    }
+
+    let bottomLeftNode: number | undefined = undefined;
+    if (isEvenRow && currentNodeKey !== columnStartIndex) {
+      bottomLeftNode = currentNodeKey + (config.columnCount - 1);
+    } else if (!isEvenRow) {
+      bottomLeftNode = currentNodeKey + config.columnCount;
+    }
+    if (
+      bottomLeftNode !== undefined &&
+      bottomLeftNode < config.columnCount * config.rowCount
+    ) {
+      traversalTree.push(bottomLeftNode);
+    }
+
+    let bottomRightNode: number | undefined = undefined;
+    if (!isEvenRow && currentNodeKey !== columnEndIndex) {
+      bottomRightNode = currentNodeKey + (config.columnCount + 1);
+    } else if (isEvenRow) {
+      bottomRightNode = currentNodeKey + config.columnCount;
+    }
+    if (
+      bottomRightNode !== undefined &&
+      bottomRightNode < config.columnCount * config.rowCount
+    ) {
+      traversalTree.push(bottomRightNode);
+    }
+
+    traversalTree.forEach((nodeKey) => {
+      if (
+        !clearedNodes.has(nodeKey) &&
+        config.hexFills[nodeKey] === startNodeOriginalPaintColor &&
+        config.hexFills[nodeKey] !== config.paintColor
+      ) {
+        nodesToClear.add(nodeKey);
+      }
+    });
+  };
+
+  traverseHexTree(hexKey);
+
+  while (nodesToClear.size > 0) {
+    const [currentNodeKey] = nodesToClear;
+    nodesToClear.delete(currentNodeKey);
+    traverseHexTree(currentNodeKey);
+  }
+
+  const newFills: HexFills = {};
+  clearedNodes.forEach((node) => {
+    newFills[node] = config.paintColor;
+  });
+
+  setConfig({
+    ...config,
+    hexFills: {
+      ...config.hexFills,
+      ...newFills,
+    },
+  });
 };

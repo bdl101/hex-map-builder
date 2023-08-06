@@ -4,12 +4,10 @@ export interface HexMapConfig {
   hexRadius: number;
   labelFormat: LabelFormatOption;
   hexOrientation: HexOrientationOption;
-  paintFill: HexFillColor;
+  paintColor: HexFillColor;
   paintType: PaintType;
   imageFormat: ImageFormatOption;
-  hexFills: {
-    [key: number]: HexFillColor | undefined;
-  };
+  hexFills: HexFills;
 }
 
 export interface HexLabelData {
@@ -33,3 +31,6 @@ export type LabelFormatOption = "none" | "numbersOnly" | "alphaX";
 export type HexOrientationOption = "pointTop" | "flatTop";
 export type ImageFormatOption = "fixed" | "contained";
 export type PaintType = "brush" | "bucket";
+export type HexFills = {
+  [key: number]: HexFillColor | undefined;
+};

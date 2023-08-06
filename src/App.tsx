@@ -10,7 +10,7 @@ import {
   PaintType,
 } from "./models";
 import { DEFAULT_HEXMAP_CONFIG } from "./constants";
-import { prepareVectorData, prepareViewbox } from "./utils";
+import { paintBucket, prepareVectorData, prepareViewbox } from "./utils";
 
 import {
   GLOBAL_STYLES,
@@ -47,20 +47,30 @@ const App = () => {
   const handleHexPress = (hexKey: number) => {
     if (!isPointerDown) {
       setIsPointerDown(true);
+      if (config.paintType === "bucket") {
+        paintBucket(config, setConfig, hexKey);
+      }
     }
-    if (config.hexFills[hexKey] !== config.paintFill) {
+    if (
+      config.paintType === "brush" &&
+      config.hexFills[hexKey] !== config.paintColor
+    ) {
       setConfig({
         ...config,
-        hexFills: { ...config.hexFills, [hexKey]: config.paintFill },
+        hexFills: { ...config.hexFills, [hexKey]: config.paintColor },
       });
     }
   };
 
   const handleHexDrag = (hexKey: number) => {
-    if (isPointerDown && config.hexFills[hexKey] !== config.paintFill) {
+    if (
+      isPointerDown &&
+      config.hexFills[hexKey] !== config.paintColor &&
+      config.paintType === "brush"
+    ) {
       setConfig({
         ...config,
-        hexFills: { ...config.hexFills, [hexKey]: config.paintFill },
+        hexFills: { ...config.hexFills, [hexKey]: config.paintColor },
       });
     }
   };
@@ -210,10 +220,10 @@ const App = () => {
               <label htmlFor="paint-fill-controls">Paint Color</label>
               <select
                 id="paint-fill-controls"
-                value={config.paintFill}
+                value={config.paintColor}
                 onChange={(e) => {
                   handleConfigChange(
-                    "paintFill",
+                    "paintColor",
                     e.target.value as HexFillColor
                   );
                 }}
@@ -227,12 +237,10 @@ const App = () => {
               </select>
             </ControlWrapper>
             <ControlWrapper>
-              <label htmlFor="paint-type-controls">Paint Color</label>
+              <label htmlFor="paint-type-controls">Paint Type</label>
               <select
-                disabled
-                title="TODO"
                 id="paint-type-controls"
-                value={config.paintFill}
+                value={config.paintType}
                 onChange={(e) => {
                   handleConfigChange("paintType", e.target.value as PaintType);
                 }}
@@ -318,6 +326,8 @@ const App = () => {
             viewBox={mapDimensions.viewBox}
             width={mapDimensions.maxWidth}
             height={mapDimensions.maxHeight}
+            // Inline styles needed to ensure proper font formatting during PNG conversion
+            style={{ fontSize: "12px", fontFamily: "sans-serif" }}
           >
             {paths.map((path, index) => (
               <g key={index}>
