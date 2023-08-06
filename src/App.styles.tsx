@@ -136,6 +136,7 @@ export const MapContainer = styled.div<{ isContained?: boolean }>`
   order: 1;
   overflow: auto;
   svg {
+    user-select: none;
     max-width: ${({ isContained }) => (isContained ? "100%" : "unset")};
     text {
       fill: #000;
