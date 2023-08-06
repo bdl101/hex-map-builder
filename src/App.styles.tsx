@@ -22,22 +22,63 @@ export const GLOBAL_STYLES = css`
 
 export const MainContainer = styled.main`
   background-color: #282c34;
+  display: flex;
   margin: 0;
   min-height: 100vh;
-  padding: 2rem;
 `;
 
-export const Controls = styled.div`
+export const ControlsDrawerToggle = styled.button<{ isDrawerOpen: boolean }>`
+  background: none;
+  border: none;
+  color: ${({ isDrawerOpen }) => (isDrawerOpen ? "#fff" : "#000")};
+  cursor: pointer;
+  height: 40px;
+  outline: none;
+  padding: 8px;
+  position: fixed;
+  right: 4px;
+  top: 4px;
+  width: 40px;
+  z-index: 2;
+  &:hover {
+    background: ${({ isDrawerOpen }) => (isDrawerOpen ? "#fff" : "#000")};
+    color: ${({ isDrawerOpen }) => (isDrawerOpen ? "#000" : "#fff")};
+  }
+  svg {
+    fill: currentColor;
+    height: 100%;
+    width: 100%;
+  }
+`;
+
+export const ControlsDrawer = styled.div<{ isVisible: boolean }>`
+  display: ${({ isVisible }) => (isVisible ? "block" : "none")};
+  max-width: 360px;
+  order: 2;
+  padding: 0.5rem;
+`;
+
+export const ControlsDrawerSection = styled.div`
+  align-content: flex-start;
   display: flex;
   flex-wrap: wrap;
+  margin: 1rem 0 0;
+  h2 {
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0 0 1rem;
+    width: 100%;
+  }
 `;
 
-export const InputContainer = styled.div`
+export const ControlWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  &:nth-of-type(odd) {
+    margin-right: 1rem;
+  }
   margin-bottom: 1rem;
-  margin-right: 1rem;
   width: 160px;
   label {
     color: #fff;
@@ -48,17 +89,41 @@ export const InputContainer = styled.div`
   }
   input,
   select,
-  button {
+  button,
+  a {
     background: #fff;
     border: 1px solid #ccc;
     border-radius: 0;
+    font-size: 0.875rem;
     height: 32px;
+    line-height: 1rem;
     margin: 0;
     outline: none;
     padding: 0.25rem;
     width: 100%;
+    &:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
     &:focus {
       border-color: blue;
+    }
+  }
+  a,
+  button {
+    align-items: center;
+    background: #ccc;
+    color: inherit;
+    font-size: 0.875rem;
+    display: inline-flex;
+    justify-content: center;
+    text-align: center;
+    text-decoration: none;
+    &:focus,
+    &:hover,
+    &:active,
+    &:visited {
+      color: inherit;
     }
   }
 `;
@@ -66,7 +131,9 @@ export const InputContainer = styled.div`
 export const MapContainer = styled.div<{ isContained?: boolean }>`
   background: #fff;
   border: 1px solid #000;
+  flex-grow: 1;
   max-width: 100%;
+  order: 1;
   overflow: auto;
   svg {
     max-width: ${({ isContained }) => (isContained ? "100%" : "unset")};

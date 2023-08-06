@@ -5,6 +5,7 @@ export interface HexMapConfig {
   labelFormat: LabelFormatOption;
   hexOrientation: HexOrientationOption;
   paintFill: HexFillColor;
+  paintType: PaintType;
   imageFormat: ImageFormatOption;
   hexFills: {
     [key: number]: HexFillColor | undefined;
@@ -31,3 +32,4 @@ export type HexFillColor =
 export type LabelFormatOption = "none" | "numbersOnly" | "alphaX";
 export type HexOrientationOption = "pointTop" | "flatTop";
 export type ImageFormatOption = "fixed" | "contained";
+export type PaintType = "brush" | "bucket";

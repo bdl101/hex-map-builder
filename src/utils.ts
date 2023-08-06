@@ -7,10 +7,7 @@ import {
 import { ANGLE, UPPER_ALPHA_INDICES } from "./constants";
 
 // TODO: support flat-top orientation
-// TODO: support paint bucket paintaing
-// TODO: support downloading svg
-// TODO: support downloading config as json
-// TODO: support importing config as json
+// TODO: support paint bucket painting
 
 /** Get the vertices for a hexagon centered at origin point x,y. The distance between any 2 vertices of the hexagon is 2r. */
 const prepareVertices = (x: number, y: number, r: number) => {
