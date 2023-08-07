@@ -145,14 +145,7 @@ const App = () => {
   return (
     <>
       <Global styles={GLOBAL_STYLES} />
-      <MainContainer
-        onMouseUp={() => {
-          setIsPointerDown(false);
-        }}
-        onTouchEnd={() => {
-          setIsPointerDown(false);
-        }}
-      >
+      <MainContainer>
         <ControlsDrawerToggle
           isDrawerOpen={isControlDrawerOpen}
           onClick={() => {
@@ -344,7 +337,15 @@ const App = () => {
             </ControlWrapper>
           </ControlsDrawerSection>
         </ControlsDrawer>
-        <MapContainer isContained={config.imageFormat === "contained"}>
+        <MapContainer
+          isContained={config.imageFormat === "contained"}
+          onMouseUp={() => {
+            setIsPointerDown(false);
+          }}
+          onTouchEnd={() => {
+            setIsPointerDown(false);
+          }}
+        >
           <svg
             ref={hexMapRef}
             viewBox={mapDimensions.viewBox}
@@ -373,16 +374,20 @@ const App = () => {
                   }
                   stroke="#000"
                   strokeWidth="1"
-                  onMouseDown={() => {
+                  onMouseDown={(e) => {
+                    e.preventDefault();
                     handleHexPress(index);
                   }}
-                  onMouseOver={() => {
+                  onMouseOver={(e) => {
+                    e.preventDefault();
                     handleHexDrag(index);
                   }}
-                  onTouchStart={() => {
+                  onTouchStart={(e) => {
+                    e.preventDefault();
                     handleHexPress(index);
                   }}
-                  onTouchMove={() => {
+                  onTouchMove={(e) => {
+                    e.preventDefault();
                     handleHexDrag(index);
                   }}
                 />
