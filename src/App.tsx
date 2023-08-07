@@ -84,7 +84,14 @@ const App = () => {
   const handleConvertToPNG = () => {
     const svgElement = hexMapRef.current;
     if (svgElement) {
-      const svgURL = new XMLSerializer().serializeToString(svgElement);
+      const svgElementClone = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "svg"
+      );
+      svgElementClone.innerHTML = svgElement.innerHTML;
+      svgElementClone.setAttribute("width", String(mapDimensions.maxWidth));
+      svgElementClone.setAttribute("height", String(mapDimensions.maxHeight));
+      const svgURL = new XMLSerializer().serializeToString(svgElementClone);
 
       const canvas = document.createElement("canvas");
       canvas.width = mapDimensions.maxWidth;
@@ -320,9 +327,10 @@ const App = () => {
                 Download JSON
               </a>
             </ControlWrapper>
-            {/* TODO: clean this up with a nicer looking button */}
             <ControlWrapper>
-              <label htmlFor="import-json-config">Import JSON Config</label>
+              <label htmlFor="import-json-config" className="file-input-label">
+                Import JSON Config
+              </label>
               <input
                 id="import-json-config"
                 type="file"
@@ -338,8 +346,16 @@ const App = () => {
           <svg
             ref={hexMapRef}
             viewBox={mapDimensions.viewBox}
-            width={mapDimensions.maxWidth}
-            height={mapDimensions.maxHeight}
+            width={
+              config.imageFormat === "fixed"
+                ? mapDimensions.maxWidth
+                : undefined
+            }
+            height={
+              config.imageFormat === "fixed"
+                ? mapDimensions.maxHeight
+                : undefined
+            }
             // Inline styles needed to ensure proper font formatting during PNG conversion
             style={{ fontSize: "12px", fontFamily: "sans-serif" }}
           >

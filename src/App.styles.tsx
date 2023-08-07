@@ -24,7 +24,7 @@ export const MainContainer = styled.main`
   background-color: #282c34;
   display: flex;
   margin: 0;
-  min-height: 100vh;
+  height: 100vh;
 `;
 
 export const ControlsDrawerToggle = styled.button<{ isDrawerOpen: boolean }>`
@@ -53,8 +53,10 @@ export const ControlsDrawerToggle = styled.button<{ isDrawerOpen: boolean }>`
 
 export const ControlsDrawer = styled.div<{ isVisible: boolean }>`
   display: ${({ isVisible }) => (isVisible ? "block" : "none")};
-  max-width: 360px;
+  height: 100%;
+  max-width: 368px;
   order: 2;
+  overflow: auto;
   padding: 0.5rem;
 `;
 
@@ -94,6 +96,7 @@ export const ControlWrapper = styled.div`
     background: #fff;
     border: 1px solid #ccc;
     border-radius: 0;
+    color: inherit;
     font-size: 0.875rem;
     height: 32px;
     line-height: 1rem;
@@ -113,12 +116,14 @@ export const ControlWrapper = styled.div`
     }
   }
   a,
-  button {
+  button,
+  .file-input-label {
     align-items: center;
     background: #ccc;
     color: inherit;
     font-size: 0.875rem;
     display: inline-flex;
+    height: 32px;
     justify-content: center;
     text-align: center;
     text-decoration: none;
@@ -135,17 +140,22 @@ export const ControlWrapper = styled.div`
       text-transform: capitalize;
     }
   }
+  input[type="file"] {
+    display: none;
+  }
 `;
 
 export const MapContainer = styled.div<{ isContained?: boolean }>`
   background: #fff;
   border: 1px solid #000;
   flex-grow: 1;
+  height: 100%;
   max-width: 100%;
   order: 1;
-  overflow: auto;
+  overflow: ${({ isContained }) => (isContained ? "hidden" : "auto")};
   svg {
     user-select: none;
+    max-height: ${({ isContained }) => (isContained ? "100%" : "unset")};
     max-width: ${({ isContained }) => (isContained ? "100%" : "unset")};
     text {
       fill: #000;

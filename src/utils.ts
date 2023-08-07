@@ -9,6 +9,7 @@ import {
 } from "./models";
 import {
   ANGLE,
+  DEFAULT_HEX_RADIUS,
   TERRAIN_ICON_PROPS_MAP,
   UPPER_ALPHA_INDICES,
 } from "./constants";
@@ -52,14 +53,19 @@ const prepareHexIcon = (
   ) {
     return undefined;
   }
+  // The original icons paths were measured based on the default hex radius, so if that changed, we need to adjust the coordinates appropriately.
+  const sizeMultitplier = config.hexRadius / DEFAULT_HEX_RADIUS;
   let counter = 0;
   const originalPathString = `${TERRAIN_ICON_PROPS_MAP[terrainType].d}`;
+
+  // Find every coordinate in the path draw string, and update the value with the offset from the current hex column/row.
   const newPathString = originalPathString.replace(
     /(\d+)+/g,
     (match, number) => {
-      const updatedCoordinate = `${
-        parseFloat(number) + (counter % 2 === 0 ? columnOffset : rowOffset)
-      }`;
+      const updatedCoordinate = `${(
+        parseFloat(number) * sizeMultitplier +
+        (counter % 2 === 0 ? columnOffset : rowOffset)
+      ).toFixed(2)}`;
       counter++;
       return updatedCoordinate;
     }
@@ -117,7 +123,6 @@ export const prepareViewbox = (config: HexMapConfig) => {
   return { maxWidth, maxHeight, viewBox: `0 0 ${maxWidth} ${maxHeight}` };
 };
 
-// TODO: Terrain Icons
 /** Get all vector data needed to output a hexmap. */
 export const prepareVectorData = (
   config: HexMapConfig
