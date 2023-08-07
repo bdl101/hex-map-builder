@@ -6,6 +6,7 @@ import {
   LabelFormatOption,
   HexData,
   HexIconData,
+  HexOrientationOption,
 } from "./models";
 import {
   ANGLE,
@@ -14,15 +15,24 @@ import {
   UPPER_ALPHA_INDICES,
 } from "./constants";
 
-// TODO: support flat-top orientation
-
 /** Get the vertices for a hexagon centered at origin point x,y. The distance between any 2 vertices of the hexagon is 2r. */
-const prepareVertices = (x: number, y: number, r: number) => {
+const prepareVertices = (
+  x: number,
+  y: number,
+  r: number,
+  format: HexOrientationOption
+) => {
   const vertices: Vertices = [];
   for (var i = 0; i < 6; i++) {
-    const xCoordinate = x + r * Math.sin(ANGLE * i);
-    const yCoordinate = y + r * Math.cos(ANGLE * i);
-    vertices.push([xCoordinate, yCoordinate]);
+    if (format === "pointTop") {
+      const xCoordinate = x + r * Math.sin(ANGLE * i);
+      const yCoordinate = y + r * Math.cos(ANGLE * i);
+      vertices.push([xCoordinate, yCoordinate]);
+    } else {
+      const xCoordinate = x + r * Math.cos(ANGLE * i);
+      const yCoordinate = y + r * Math.sin(ANGLE * i);
+      vertices.push([xCoordinate, yCoordinate]);
+    }
   }
   return vertices;
 };
@@ -82,45 +92,91 @@ const prepareHexLabelData = (
   columnIndex: number,
   rowIndex: number,
   hexRadius: number,
-  labelFormat: LabelFormatOption
+  labelFormat: LabelFormatOption,
+  hexOrientation: HexOrientationOption
 ): HexLabelData => {
-  const letterRepititions = Math.ceil(
-    (columnIndex + 1) / UPPER_ALPHA_INDICES.length
-  );
-  let alphaXString = "";
-  for (let i = 0; i < letterRepititions; i++) {
-    alphaXString += String.fromCharCode(
-      UPPER_ALPHA_INDICES[columnIndex % UPPER_ALPHA_INDICES.length]
-    );
-  }
-
   let formattedLabelString = "";
 
-  if (labelFormat === "alphaX") {
-    formattedLabelString = `${alphaXString}${rowIndex}`;
-  } else if (labelFormat === "numbersOnly") {
-    formattedLabelString = `${columnIndex},${rowIndex}`;
+  if (labelFormat === "none") {
+    return {
+      x: 0,
+      y: 0,
+      label: formattedLabelString,
+    };
   }
 
-  return {
-    x: vertices[4][0] + hexRadius / 10,
-    y: vertices[4][1] + hexRadius / 5,
-    label: formattedLabelString,
-  };
+  if (hexOrientation === "pointTop") {
+    const letterRepititions = Math.ceil(
+      (columnIndex + 1) / UPPER_ALPHA_INDICES.length
+    );
+    let alphaXString = "";
+    for (let i = 0; i < letterRepititions; i++) {
+      alphaXString += String.fromCharCode(
+        UPPER_ALPHA_INDICES[columnIndex % UPPER_ALPHA_INDICES.length]
+      );
+    }
+    if (labelFormat === "alphaX") {
+      formattedLabelString = `${alphaXString}${rowIndex}`;
+    } else if (labelFormat === "numbersOnly") {
+      formattedLabelString = `${columnIndex},${rowIndex}`;
+    }
+    return {
+      x: vertices[4][0] + hexRadius / 10,
+      y: vertices[4][1] + hexRadius / 5,
+      label: formattedLabelString,
+    };
+  } else {
+    const letterRepititions = Math.ceil(
+      ((columnIndex + 1) * 2) / UPPER_ALPHA_INDICES.length
+    );
+    let alphaXString = "";
+    for (let i = 0; i < letterRepititions; i++) {
+      alphaXString += String.fromCharCode(
+        UPPER_ALPHA_INDICES[
+          rowIndex % 2 === 0
+            ? (columnIndex * 2) % UPPER_ALPHA_INDICES.length
+            : (columnIndex * 2 + 1) % UPPER_ALPHA_INDICES.length
+        ]
+      );
+    }
+    if (labelFormat === "alphaX") {
+      formattedLabelString = `${alphaXString}${Math.floor(rowIndex / 2)}`;
+    } else if (labelFormat === "numbersOnly") {
+      formattedLabelString = `${
+        rowIndex % 2 === 0 ? columnIndex * 2 : columnIndex * 2 + 1
+      },${Math.floor(rowIndex / 2)}`;
+    }
+    return {
+      x: vertices[4][0] + hexRadius / 100,
+      y: vertices[4][1] + hexRadius / 4,
+      label: formattedLabelString,
+    };
+  }
 };
 
 /** Given a set of configurations, prepare the viewbox size for the hex map. */
 export const prepareViewbox = (config: HexMapConfig) => {
-  const { rowCount, columnCount, hexRadius } = config;
-  const columnOffset = hexRadius - hexRadius * Math.sin(ANGLE);
-  const maxWidth =
-    2 * columnCount * hexRadius -
-    columnCount * 2 * columnOffset +
-    columnOffset +
-    (hexRadius - columnOffset) +
-    1;
-  const maxHeight = hexRadius / 2 + 1.5 * rowCount * hexRadius;
-  return { maxWidth, maxHeight, viewBox: `0 0 ${maxWidth} ${maxHeight}` };
+  const { rowCount, columnCount, hexRadius, hexOrientation } = config;
+  if (hexOrientation === "pointTop") {
+    const columnOffset = hexRadius - hexRadius * Math.sin(ANGLE);
+    const maxWidth =
+      2 * columnCount * hexRadius -
+      columnCount * 2 * columnOffset +
+      columnOffset +
+      (hexRadius - columnOffset) +
+      1;
+    const maxHeight = hexRadius / 2 + 1.5 * rowCount * hexRadius;
+    return { maxWidth, maxHeight, viewBox: `0 0 ${maxWidth} ${maxHeight}` };
+  } else {
+    const rowOffset = hexRadius - hexRadius * Math.sin(ANGLE);
+    const maxWidth = 3.25 * hexRadius * columnCount;
+    const maxHeight =
+      2 * hexRadius -
+      2 * rowOffset +
+      (rowCount - 1) * (hexRadius - rowOffset) +
+      2;
+    return { maxWidth, maxHeight, viewBox: `0 0 ${maxWidth} ${maxHeight}` };
+  }
 };
 
 /** Get all vector data needed to output a hexmap. */
@@ -131,7 +187,8 @@ export const prepareVectorData = (
   icons: HexIconData[];
   labelData: HexLabelData[];
 } => {
-  const { rowCount, columnCount, hexRadius, labelFormat } = config;
+  const { rowCount, columnCount, hexRadius, labelFormat, hexOrientation } =
+    config;
 
   const paths: string[] = [];
   const icons: HexIconData[] = [];
@@ -140,30 +197,66 @@ export const prepareVectorData = (
   let currentHexIndex = 0;
 
   for (let j = 0; j < rowCount; j++) {
-    const columnOffset = hexRadius - hexRadius * Math.sin(ANGLE);
-    const yCoordinate = hexRadius + 1.5 * j * hexRadius;
+    let columnOffset = 0;
+    let rowOffset = 0;
+    let xCoordinate = 0;
+    let yCoordinate = 0;
+
+    if (hexOrientation === "pointTop") {
+      columnOffset = hexRadius - hexRadius * Math.sin(ANGLE);
+      yCoordinate = hexRadius + 1.5 * j * hexRadius;
+    } else {
+      rowOffset = hexRadius - hexRadius * Math.sin(ANGLE);
+      columnOffset = j % 2 !== 0 ? 1.5 * hexRadius : 0;
+      yCoordinate = hexRadius * (j + 1) - (j + 1) * rowOffset;
+    }
     for (let i = 0; i < columnCount; i++) {
-      const xCoordinate =
-        hexRadius +
-        2 * i * hexRadius -
-        2 * i * columnOffset +
-        (j % 2) * (hexRadius - columnOffset);
-      const vertices = prepareVertices(xCoordinate, yCoordinate, hexRadius);
-      const path = prepareHexPath(vertices);
-      const icon = prepareHexIcon(
-        config,
-        currentHexIndex,
-        2 * i * hexRadius -
+      if (hexOrientation === "pointTop") {
+        xCoordinate =
+          hexRadius +
+          2 * i * hexRadius -
           2 * i * columnOffset +
-          (j % 2) * (hexRadius - columnOffset),
-        1.5 * j * hexRadius
+          (j % 2) * (hexRadius - columnOffset);
+      } else {
+        xCoordinate =
+          columnOffset +
+          hexRadius +
+          hexRadius * i * 2 +
+          hexRadius * Math.cos(ANGLE) * i * 2;
+      }
+
+      const vertices = prepareVertices(
+        xCoordinate,
+        yCoordinate,
+        hexRadius,
+        hexOrientation
       );
+      const path = prepareHexPath(vertices);
+      const icon =
+        hexOrientation === "pointTop"
+          ? prepareHexIcon(
+              config,
+              currentHexIndex,
+              2 * i * hexRadius -
+                2 * i * columnOffset +
+                (j % 2) * (hexRadius - columnOffset),
+              1.5 * j * hexRadius
+            )
+          : prepareHexIcon(
+              config,
+              currentHexIndex,
+              columnOffset +
+                hexRadius * i * 2 +
+                hexRadius * Math.cos(ANGLE) * i * 2,
+              hexRadius * (j + 1) - (j + 1) * rowOffset - hexRadius
+            );
       const labelDataPoint = prepareHexLabelData(
         vertices,
         i,
         j,
         hexRadius,
-        labelFormat
+        labelFormat,
+        hexOrientation
       );
 
       paths.push(path);

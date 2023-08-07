@@ -91,6 +91,10 @@ const App = () => {
       svgElementClone.innerHTML = svgElement.innerHTML;
       svgElementClone.setAttribute("width", String(mapDimensions.maxWidth));
       svgElementClone.setAttribute("height", String(mapDimensions.maxHeight));
+      svgElementClone.setAttribute(
+        "style",
+        svgElement.getAttribute("style") ?? ""
+      );
       const svgURL = new XMLSerializer().serializeToString(svgElementClone);
 
       const canvas = document.createElement("canvas");
@@ -214,8 +218,6 @@ const App = () => {
                 Hexagon Orientation
               </label>
               <select
-                title="TODO"
-                disabled
                 id="hex-orientation-controls"
                 value={config.hexOrientation}
                 onChange={(e) => {
@@ -356,7 +358,6 @@ const App = () => {
                 ? mapDimensions.maxHeight
                 : undefined
             }
-            // Inline styles needed to ensure proper font formatting during PNG conversion
             style={{ fontSize: "12px", fontFamily: "sans-serif" }}
           >
             {paths.map((path, index) => (
