@@ -16,6 +16,7 @@ export const DEFAULT_HEXMAP_CONFIG: HexMapConfig = {
   hexData: {},
   imageFormat: "contained",
   showHexIcons: false,
+  useTerrainColors: true,
 };
 
 // [A-Z]

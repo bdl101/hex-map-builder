@@ -297,6 +297,17 @@ const App = () => {
                 }}
               />
             </ControlWrapper>
+            <ControlWrapper>
+              <label htmlFor="use-color-controls">Use Terrain Colors</label>
+              <input
+                id="use-color-controls"
+                type="checkbox"
+                checked={config.useTerrainColors}
+                onChange={(e) => {
+                  handleConfigChange("useTerrainColors", e.target.checked);
+                }}
+              />
+            </ControlWrapper>
           </ControlsDrawerSection>
           <ControlsDrawerSection>
             <h2>Manage File</h2>
@@ -361,42 +372,43 @@ const App = () => {
             }
             style={{ fontSize: "12px", fontFamily: "sans-serif" }}
           >
-            {paths.map((path, index) => (
-              <g key={index}>
-                <path
-                  d={path}
-                  fill={
-                    config.hexData[index]?.terrainType
-                      ? TERRAIN_HEX_COLOR_MAP[
-                          config.hexData[index]!.terrainType
-                        ]
-                      : "transparent"
-                  }
-                  stroke="#000"
-                  strokeWidth="1"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    handleHexPress(index);
-                  }}
-                  onMouseOver={(e) => {
-                    e.preventDefault();
-                    handleHexDrag(index);
-                  }}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
-                    handleHexPress(index);
-                  }}
-                  onTouchMove={(e) => {
-                    e.preventDefault();
-                    handleHexDrag(index);
-                  }}
-                />
-                {icons[index] && <path {...icons[index]} />}
-                <text x={labelData[index].x} y={labelData[index].y}>
-                  {labelData[index].label}
-                </text>
-              </g>
-            ))}
+            {paths.map((path, index) => {
+              const terrainType = config.hexData[index]?.terrainType;
+              let hexFillColor = "transparent";
+              if (terrainType !== undefined && config.useTerrainColors) {
+                hexFillColor = TERRAIN_HEX_COLOR_MAP[terrainType];
+              }
+              return (
+                <g key={index}>
+                  <path
+                    d={path}
+                    fill={hexFillColor}
+                    stroke="#000"
+                    strokeWidth="1"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handleHexPress(index);
+                    }}
+                    onMouseOver={(e) => {
+                      e.preventDefault();
+                      handleHexDrag(index);
+                    }}
+                    onTouchStart={(e) => {
+                      e.preventDefault();
+                      handleHexPress(index);
+                    }}
+                    onTouchMove={(e) => {
+                      e.preventDefault();
+                      handleHexDrag(index);
+                    }}
+                  />
+                  {icons[index] && <path {...icons[index]} />}
+                  <text x={labelData[index].x} y={labelData[index].y}>
+                    {labelData[index].label}
+                  </text>
+                </g>
+              );
+            })}
           </svg>
         </MapContainer>
       </MainContainer>

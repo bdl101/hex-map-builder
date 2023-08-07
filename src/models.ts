@@ -9,6 +9,7 @@ export interface HexMapConfig {
   imageFormat: ImageFormatOption;
   hexData: HexData;
   showHexIcons: boolean;
+  useTerrainColors: boolean;
 }
 
 export interface HexLabelData {
