@@ -108,6 +108,9 @@ export const ControlWrapper = styled.div`
     &:focus {
       border-color: blue;
     }
+    &[type="checkbox"] {
+      width: 32px;
+    }
   }
   a,
   button {
@@ -124,6 +127,12 @@ export const ControlWrapper = styled.div`
     &:active,
     &:visited {
       color: inherit;
+    }
+  }
+  select {
+    text-transform: capitalize;
+    option {
+      text-transform: capitalize;
     }
   }
 `;

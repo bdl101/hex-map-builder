@@ -5,11 +5,11 @@ import {
   HexMapConfig,
   LabelFormatOption,
   HexOrientationOption,
-  HexFillColor,
   ImageFormatOption,
   PaintType,
+  Terrain,
 } from "./models";
-import { DEFAULT_HEXMAP_CONFIG } from "./constants";
+import { DEFAULT_HEXMAP_CONFIG, TERRAIN_HEX_COLOR_MAP } from "./constants";
 import { paintBucket, prepareVectorData, prepareViewbox } from "./utils";
 
 import {
@@ -29,7 +29,7 @@ const App = () => {
   const [isControlDrawerOpen, setIsControlDrawerOpen] = useState(true);
   const [config, setConfig] = useState<HexMapConfig>(DEFAULT_HEXMAP_CONFIG);
 
-  const { paths, labelData } = useMemo(() => {
+  const { paths, icons, labelData } = useMemo(() => {
     return prepareVectorData(config);
   }, [config]);
 
@@ -53,11 +53,14 @@ const App = () => {
     }
     if (
       config.paintType === "brush" &&
-      config.hexFills[hexKey] !== config.paintColor
+      config.hexData[hexKey]?.terrainType !== config.terrainType
     ) {
       setConfig({
         ...config,
-        hexFills: { ...config.hexFills, [hexKey]: config.paintColor },
+        hexData: {
+          ...config.hexData,
+          [hexKey]: { terrainType: config.terrainType },
+        },
       });
     }
   };
@@ -65,12 +68,15 @@ const App = () => {
   const handleHexDrag = (hexKey: number) => {
     if (
       isPointerDown &&
-      config.hexFills[hexKey] !== config.paintColor &&
+      config.hexData[hexKey]?.terrainType !== config.terrainType &&
       config.paintType === "brush"
     ) {
       setConfig({
         ...config,
-        hexFills: { ...config.hexFills, [hexKey]: config.paintColor },
+        hexData: {
+          ...config.hexData,
+          [hexKey]: { terrainType: config.terrainType },
+        },
       });
     }
   };
@@ -217,23 +223,19 @@ const App = () => {
               </select>
             </ControlWrapper>
             <ControlWrapper>
-              <label htmlFor="paint-fill-controls">Paint Color</label>
+              <label htmlFor="terrain-type-controls">Terrain Type</label>
               <select
-                id="paint-fill-controls"
-                value={config.paintColor}
+                id="terrain-type-controls"
+                value={config.terrainType}
                 onChange={(e) => {
-                  handleConfigChange(
-                    "paintColor",
-                    e.target.value as HexFillColor
-                  );
+                  handleConfigChange("terrainType", e.target.value as Terrain);
                 }}
               >
-                <option value={"transparent"}>None</option>
-                <option value={"ivory"}>Desert</option>
-                <option value={"grey"}>City</option>
-                <option value={"red"}>Lava</option>
-                <option value={"brown"}>Mountain</option>
-                <option value={"darkcyan"}>Swamp</option>
+                {Object.keys(TERRAIN_HEX_COLOR_MAP).map((terrain) => (
+                  <option key={terrain} value={terrain}>
+                    {terrain}
+                  </option>
+                ))}
               </select>
             </ControlWrapper>
             <ControlWrapper>
@@ -282,6 +284,17 @@ const App = () => {
                 <option value={"fixed"}>Fixed</option>
               </select>
             </ControlWrapper>
+            <ControlWrapper>
+              <label htmlFor="icon-visibility-controls">Show Icons</label>
+              <input
+                id="icon-visibility-controls"
+                type="checkbox"
+                checked={config.showHexIcons}
+                onChange={(e) => {
+                  handleConfigChange("showHexIcons", e.target.checked);
+                }}
+              />
+            </ControlWrapper>
           </ControlsDrawerSection>
           <ControlsDrawerSection>
             <h2>Manage File</h2>
@@ -307,6 +320,7 @@ const App = () => {
                 Download JSON
               </a>
             </ControlWrapper>
+            {/* TODO: clean this up with a nicer looking button */}
             <ControlWrapper>
               <label htmlFor="import-json-config">Import JSON Config</label>
               <input
@@ -333,7 +347,13 @@ const App = () => {
               <g key={index}>
                 <path
                   d={path}
-                  fill={config.hexFills[index] || "transparent"}
+                  fill={
+                    config.hexData[index]?.terrainType
+                      ? TERRAIN_HEX_COLOR_MAP[
+                          config.hexData[index]!.terrainType
+                        ]
+                      : "transparent"
+                  }
                   stroke="#000"
                   strokeWidth="1"
                   onMouseDown={() => {
@@ -349,74 +369,12 @@ const App = () => {
                     handleHexDrag(index);
                   }}
                 />
+                {icons[index] && <path {...icons[index]} />}
                 <text x={labelData[index].x} y={labelData[index].y}>
                   {labelData[index].label}
                 </text>
               </g>
             ))}
-            {/* Hills */}
-            {/* <path
-              d="M 25 60 C 32 40, 48 40, 55 60 M 50 48 C 58 38, 70 40, 75 54"
-              stroke="black"
-              strokeWidth={3}
-              fill="transparent"
-              opacity={0.3}
-              rx={2}
-            /> */}
-
-            {/* Water */}
-            {/* <path
-              d="M 25 40 C 46 25, 52 55, 75 40 M 25 60 C 46 45, 52 75, 75 60"
-              stroke="black"
-              strokeWidth={3}
-              fill="transparent"
-              opacity={0.5}
-              rx={2}
-            /> */}
-
-            {/* Mountain */}
-            {/* <path
-              d="M 25 65 L 38 40 L 44 50 L 54 25 L 70 65 Z"
-              stroke="black"
-              strokeWidth={3}
-              fill="transparent"
-              opacity={0.3}
-              rx={5}
-            /> */}
-
-            {/* Tundra */}
-            {/* <path
-              d="M 32 49 L 68 49 M 49 32 L 49 68 M 39 39 L 59 59 M 59 39 L 39 59"
-              stroke="black"
-              strokeWidth={2}
-              fill="transparent"
-              opacity={0.3}
-              rx={2}
-            /> */}
-
-            {/* Swamp */}
-            {/* {
-              <path
-                d="M 49 70 L 49 30 M 35 45 L 49 30 L 63 45 M 35 55 L 49 40 L 63 55"
-                stroke="black"
-                strokeWidth={2}
-                fill="transparent"
-                opacity={0.3}
-                rx={2}
-              />
-            } */}
-
-            {/* Forest */}
-
-            {/* Volcanic */}
-            {/* <path
-              d="M 34 42 L 48 35 L 65 40 L 71 54 L 65 62 L 51 68 L 40 63 L 32 51 Z M 48 35 L 47 45 L 55 55 L 51 68"
-              stroke="black"
-              strokeWidth={2}
-              fill="transparent"
-              opacity={0.3}
-              rx={2}
-            /> */}
           </svg>
         </MapContainer>
       </MainContainer>

@@ -4,9 +4,14 @@ import {
   HexLabelData,
   HexMapConfig,
   LabelFormatOption,
-  HexFills,
+  HexData,
+  HexIconData,
 } from "./models";
-import { ANGLE, UPPER_ALPHA_INDICES } from "./constants";
+import {
+  ANGLE,
+  TERRAIN_ICON_PROPS_MAP,
+  UPPER_ALPHA_INDICES,
+} from "./constants";
 
 // TODO: support flat-top orientation
 
@@ -22,7 +27,7 @@ const prepareVertices = (x: number, y: number, r: number) => {
 };
 
 /** Get the vector path data to draw a hexagon with the provided vertices. */
-const preparePath = (vertices: Vertices) => {
+const prepareHexPath = (vertices: Vertices) => {
   return vertices.reduce((accumulator, currentValue, index) => {
     accumulator +=
       index === vertices.length - 1
@@ -30,6 +35,39 @@ const preparePath = (vertices: Vertices) => {
         : ` L ${currentValue[0]} ${currentValue[1]}`;
     return accumulator;
   }, `M ${vertices[5][0]} ${vertices[5][1]} `);
+};
+
+/** Given a particular terrain type for a hex, prepare the render props needed for an icon vector path. */
+const prepareHexIcon = (
+  config: HexMapConfig,
+  nodeKey: number,
+  columnOffset: number,
+  rowOffset: number
+): HexIconData => {
+  const terrainType = config.hexData[nodeKey]?.terrainType;
+  if (
+    !config.showHexIcons ||
+    terrainType === undefined ||
+    terrainType === "none"
+  ) {
+    return undefined;
+  }
+  let counter = 0;
+  const originalPathString = `${TERRAIN_ICON_PROPS_MAP[terrainType].d}`;
+  const newPathString = originalPathString.replace(
+    /(\d+)+/g,
+    (match, number) => {
+      const updatedCoordinate = `${
+        parseFloat(number) + (counter % 2 === 0 ? columnOffset : rowOffset)
+      }`;
+      counter++;
+      return updatedCoordinate;
+    }
+  );
+  return {
+    ...TERRAIN_ICON_PROPS_MAP[terrainType],
+    d: newPathString,
+  };
 };
 
 /** Get the vector text data to draw a coordinates label within the provided vertices. */
@@ -83,11 +121,19 @@ export const prepareViewbox = (config: HexMapConfig) => {
 /** Get all vector data needed to output a hexmap. */
 export const prepareVectorData = (
   config: HexMapConfig
-): { paths: string[]; labelData: HexLabelData[] } => {
+): {
+  paths: string[];
+  icons: HexIconData[];
+  labelData: HexLabelData[];
+} => {
   const { rowCount, columnCount, hexRadius, labelFormat } = config;
 
   const paths: string[] = [];
+  const icons: HexIconData[] = [];
   const labelData: HexLabelData[] = [];
+
+  let currentHexIndex = 0;
+
   for (let j = 0; j < rowCount; j++) {
     const columnOffset = hexRadius - hexRadius * Math.sin(ANGLE);
     const yCoordinate = hexRadius + 1.5 * j * hexRadius;
@@ -98,7 +144,15 @@ export const prepareVectorData = (
         2 * i * columnOffset +
         (j % 2) * (hexRadius - columnOffset);
       const vertices = prepareVertices(xCoordinate, yCoordinate, hexRadius);
-      const path = preparePath(vertices);
+      const path = prepareHexPath(vertices);
+      const icon = prepareHexIcon(
+        config,
+        currentHexIndex,
+        2 * i * hexRadius -
+          2 * i * columnOffset +
+          (j % 2) * (hexRadius - columnOffset),
+        1.5 * j * hexRadius
+      );
       const labelDataPoint = prepareHexLabelData(
         vertices,
         i,
@@ -106,12 +160,15 @@ export const prepareVectorData = (
         hexRadius,
         labelFormat
       );
+
       paths.push(path);
+      icons.push(icon);
       labelData.push(labelDataPoint);
+      currentHexIndex++;
     }
   }
 
-  return { paths, labelData };
+  return { paths, icons, labelData };
 };
 
 /** Given a particular hex and new color, set the color of each connected hex with the same original color. */
@@ -120,7 +177,7 @@ export const paintBucket = (
   setConfig: Dispatch<SetStateAction<HexMapConfig>>,
   hexKey: number
 ) => {
-  const startNodeOriginalPaintColor = config.hexFills[hexKey];
+  const startNodeOriginalTerrain = config.hexData[hexKey]?.terrainType;
   const clearedNodes = new Set<number>();
   const nodesToClear = new Set<number>();
 
@@ -187,8 +244,8 @@ export const paintBucket = (
     traversalTree.forEach((nodeKey) => {
       if (
         !clearedNodes.has(nodeKey) &&
-        config.hexFills[nodeKey] === startNodeOriginalPaintColor &&
-        config.hexFills[nodeKey] !== config.paintColor
+        config.hexData[nodeKey]?.terrainType === startNodeOriginalTerrain &&
+        config.hexData[nodeKey]?.terrainType !== config.terrainType
       ) {
         nodesToClear.add(nodeKey);
       }
@@ -203,15 +260,18 @@ export const paintBucket = (
     traverseHexTree(currentNodeKey);
   }
 
-  const newFills: HexFills = {};
+  const newFills: HexData = {};
   clearedNodes.forEach((node) => {
-    newFills[node] = config.paintColor;
+    newFills[node] = {
+      ...config.hexData[node],
+      terrainType: config.terrainType,
+    };
   });
 
   setConfig({
     ...config,
-    hexFills: {
-      ...config.hexFills,
+    hexData: {
+      ...config.hexData,
       ...newFills,
     },
   });
