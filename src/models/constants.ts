@@ -117,3 +117,14 @@ export const TERRAIN_ICON_PROPS_MAP: Record<
     rx: 2,
   },
 };
+
+export const CARDINAL_DIRECTIONS = [
+  "north",
+  "south",
+  "east",
+  "west",
+  "northEast",
+  "northWest",
+  "southEast",
+  "southWest",
+] as const;

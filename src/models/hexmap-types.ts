@@ -1,3 +1,5 @@
+import { CARDINAL_DIRECTIONS } from "./constants";
+
 export interface HexMapConfig {
   rowCount: number;
   columnCount: number;
@@ -13,6 +15,7 @@ export interface HexMapConfig {
   schemaVersion?: string;
 }
 
+// TODO: find a better way to manage this
 export interface HexMapConfig2 {
   rowCount: number;
   columnCount: number;
@@ -22,10 +25,17 @@ export interface HexMapConfig2 {
   terrainType: Terrain;
   paintType: PaintType;
   imageFormat: ImageFormatOption;
-  hexData: HexData;
   showHexIcons: boolean;
   useTerrainColors: boolean;
   schemaVersion: string;
+  hexStorage: Array<
+    Array<
+      | {
+          terrainType: Terrain;
+        }
+      | undefined
+    >
+  >;
 }
 
 export interface HexLabelData {
@@ -58,8 +68,8 @@ export type HexOrientationOption = "pointTop" | "flatTop";
 
 /** TODO */
 export type HexOrientation =
-  | "pointTopEvenRow"
-  | "pointTopOddRow"
+  | "pointedTopEvenRow"
+  | "pointedTopOddRow"
   | "flatTopEvenColumn"
   | "flatTopOddColumn";
 
@@ -67,10 +77,19 @@ export type ImageFormatOption = "fixed" | "contained";
 
 export type PaintType = "brush" | "bucket";
 
-export type HexData = {
-  [key: number]:
-    | {
-        terrainType: Terrain;
-      }
-    | undefined;
-};
+export type HexData = Record<
+  number,
+  | {
+      terrainType: Terrain;
+    }
+  | undefined
+>;
+
+export type CardinalDirection = (typeof CARDINAL_DIRECTIONS)[number];
+
+export type PointedTopsDirection = Exclude<
+  CardinalDirection,
+  "north" | "south"
+>;
+
+export type FlatTopsDirection = Exclude<CardinalDirection, "east" | "west">;
