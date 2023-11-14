@@ -7,24 +7,25 @@ import {
   HexData,
   HexIconData,
   HexOrientationOption,
-} from "./models";
+  HexOrientation,
+} from "../models";
 import {
   ANGLE,
   DEFAULT_HEX_RADIUS,
   TERRAIN_ICON_PROPS_MAP,
   UPPER_ALPHA_INDICES,
-} from "./constants";
+} from "../models";
 
 /** Get the vertices for a hexagon centered at origin point x,y. The distance between any 2 vertices of the hexagon is 2r. */
-const prepareVertices = (
+export const prepareVertices = (
   x: number,
   y: number,
   r: number,
-  format: HexOrientationOption
+  orientation: HexOrientationOption
 ) => {
   const vertices: Vertices = [];
   for (var i = 0; i < 6; i++) {
-    if (format === "pointTop") {
+    if (orientation === "pointTop") {
       const xCoordinate = x + r * Math.sin(ANGLE * i);
       const yCoordinate = y + r * Math.cos(ANGLE * i);
       vertices.push([xCoordinate, yCoordinate]);
@@ -37,8 +38,18 @@ const prepareVertices = (
   return vertices;
 };
 
+/** Given a particular row, column, hex radius, and hex orientation, determine the origin point (center x,y) for a hex. */
+export const prepareHexOrigin = (
+  rowIndex: number,
+  columnIndex: number,
+  hexRadius: number,
+  orientation: HexOrientation
+) => {
+  // TODO
+};
+
 /** Get the vector path data to draw a hexagon with the provided vertices. */
-const prepareHexPath = (vertices: Vertices) => {
+export const prepareHexPath = (vertices: Vertices) => {
   return vertices.reduce((accumulator, currentValue, index) => {
     accumulator +=
       index === vertices.length - 1
@@ -49,7 +60,7 @@ const prepareHexPath = (vertices: Vertices) => {
 };
 
 /** Given a particular terrain type for a hex, prepare the render props needed for an icon vector path. */
-const prepareHexIcon = (
+export const prepareHexIcon = (
   config: HexMapConfig,
   nodeKey: number,
   columnOffset: number,
@@ -87,7 +98,7 @@ const prepareHexIcon = (
 };
 
 /** Get the vector text data to draw a coordinates label within the provided vertices. */
-const prepareHexLabelData = (
+export const prepareHexLabelData = (
   vertices: Vertices,
   columnIndex: number,
   rowIndex: number,

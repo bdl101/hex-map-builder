@@ -121,6 +121,7 @@ export const ControlWrapper = styled.div`
     align-items: center;
     background: #ccc;
     color: inherit;
+    cursor: pointer;
     font-size: 0.875rem;
     display: inline-flex;
     height: 32px;
@@ -132,6 +133,12 @@ export const ControlWrapper = styled.div`
     &:active,
     &:visited {
       color: inherit;
+    }
+    &.error {
+      background: red;
+      border: none;
+      color: #fff;
+      outline: none;
     }
   }
   select {

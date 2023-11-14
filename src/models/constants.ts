@@ -1,4 +1,8 @@
-import { HexMapConfig, Terrain } from "./models";
+import { HexMapConfig, Terrain } from "./hexmap-types";
+
+export const CONFIG_STORAGE_KEY = "hexmap-config";
+
+export const CURRENT_CONFIG_SCHEMA_VERSION = "0.1";
 
 export const ANGLE = (2 * Math.PI) / 6;
 export const DEFAULT_ROW_COUNT = 3;

@@ -10,6 +10,22 @@ export interface HexMapConfig {
   hexData: HexData;
   showHexIcons: boolean;
   useTerrainColors: boolean;
+  schemaVersion?: string;
+}
+
+export interface HexMapConfig2 {
+  rowCount: number;
+  columnCount: number;
+  hexRadius: number;
+  labelFormat: LabelFormatOption;
+  hexOrientation: HexOrientation;
+  terrainType: Terrain;
+  paintType: PaintType;
+  imageFormat: ImageFormatOption;
+  hexData: HexData;
+  showHexIcons: boolean;
+  useTerrainColors: boolean;
+  schemaVersion: string;
 }
 
 export interface HexLabelData {
@@ -35,10 +51,22 @@ export type Terrain =
   | "mountains"
   | "water"
   | "swamp";
+
 export type LabelFormatOption = "none" | "numbersOnly" | "alphaX";
+
 export type HexOrientationOption = "pointTop" | "flatTop";
+
+/** TODO */
+export type HexOrientation =
+  | "pointTopEvenRow"
+  | "pointTopOddRow"
+  | "flatTopEvenColumn"
+  | "flatTopOddColumn";
+
 export type ImageFormatOption = "fixed" | "contained";
+
 export type PaintType = "brush" | "bucket";
+
 export type HexData = {
   [key: number]:
     | {

@@ -8,9 +8,20 @@ import {
   ImageFormatOption,
   PaintType,
   Terrain,
+  TERRAIN_HEX_COLOR_MAP,
 } from "./models";
-import { DEFAULT_HEXMAP_CONFIG, TERRAIN_HEX_COLOR_MAP } from "./constants";
-import { paintBucket, prepareVectorData, prepareViewbox } from "./utils";
+import {
+  clearConfigFromLocalStorage,
+  handleConfigImport,
+  handleConvertToPNG,
+  handleConvertToSVG,
+  handleHexDrag,
+  handleHexPress,
+  loadConfigFromLocalStorage,
+  prepareVectorData,
+  prepareViewbox,
+  saveConfigToLocalStorage,
+} from "./utils";
 
 import {
   GLOBAL_STYLES,
@@ -22,12 +33,14 @@ import {
   ControlsDrawerToggle,
 } from "./App.styles";
 
+const INITIAL_CONFIG = loadConfigFromLocalStorage();
+
 const App = () => {
   const hexMapRef = useRef<SVGSVGElement>(null);
 
   const [isPointerDown, setIsPointerDown] = useState(false);
   const [isControlDrawerOpen, setIsControlDrawerOpen] = useState(true);
-  const [config, setConfig] = useState<HexMapConfig>(DEFAULT_HEXMAP_CONFIG);
+  const [config, setConfig] = useState<HexMapConfig>(INITIAL_CONFIG);
 
   const { paths, icons, labelData } = useMemo(() => {
     return prepareVectorData(config);
@@ -41,105 +54,9 @@ const App = () => {
     configKey: K,
     newValue: HexMapConfig[K]
   ) => {
-    setConfig({ ...config, [configKey]: newValue });
-  };
-
-  const handleHexPress = (hexKey: number) => {
-    if (!isPointerDown) {
-      setIsPointerDown(true);
-      if (config.paintType === "bucket") {
-        paintBucket(config, setConfig, hexKey);
-      }
-    }
-    if (
-      config.paintType === "brush" &&
-      config.hexData[hexKey]?.terrainType !== config.terrainType
-    ) {
-      setConfig({
-        ...config,
-        hexData: {
-          ...config.hexData,
-          [hexKey]: { terrainType: config.terrainType },
-        },
-      });
-    }
-  };
-
-  const handleHexDrag = (hexKey: number) => {
-    if (
-      isPointerDown &&
-      config.hexData[hexKey]?.terrainType !== config.terrainType &&
-      config.paintType === "brush"
-    ) {
-      setConfig({
-        ...config,
-        hexData: {
-          ...config.hexData,
-          [hexKey]: { terrainType: config.terrainType },
-        },
-      });
-    }
-  };
-
-  const handleConvertToPNG = () => {
-    const svgElement = hexMapRef.current;
-    if (svgElement) {
-      const svgElementClone = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "svg"
-      );
-      svgElementClone.innerHTML = svgElement.innerHTML;
-      svgElementClone.setAttribute("width", String(mapDimensions.maxWidth));
-      svgElementClone.setAttribute("height", String(mapDimensions.maxHeight));
-      svgElementClone.setAttribute(
-        "style",
-        svgElement.getAttribute("style") ?? ""
-      );
-      const svgURL = new XMLSerializer().serializeToString(svgElementClone);
-
-      const canvas = document.createElement("canvas");
-      canvas.width = mapDimensions.maxWidth;
-      canvas.height = mapDimensions.maxHeight;
-      const context = canvas.getContext("2d");
-
-      var img = new Image();
-      img.onload = () => {
-        context?.drawImage(img, 0, 0);
-        const pngURL = canvas?.toDataURL("image/png");
-        var newTab = window.open("about:blank", "Hexmap PNG image from canvas");
-        newTab?.document.write("<img src='" + pngURL + "' alt='PNG Hexmap'/>");
-      };
-      img.src =
-        "data:image/svg+xml; charset=utf8, " + encodeURIComponent(svgURL);
-    }
-  };
-
-  const handleConvertToSVG = () => {
-    const svgElement = hexMapRef.current;
-    if (svgElement) {
-      const svgURL = new XMLSerializer().serializeToString(svgElement);
-
-      var img = new Image();
-      img.onload = () => {
-        var newTab = window.open("about:blank", "Hexmap SVG image");
-        newTab?.document.write(`<img src='${img.src}' alt='SVG Hexmap'/>`);
-      };
-      img.src =
-        "data:image/svg+xml; charset=utf8, " + encodeURIComponent(svgURL);
-    }
-  };
-
-  const handleConfigImport = (fileList: FileList | null) => {
-    if (fileList) {
-      new Response(fileList[0]).json().then(
-        (json) => {
-          setConfig({ ...DEFAULT_HEXMAP_CONFIG, ...json });
-        },
-        (err) => {
-          alert("Invalid data format");
-        }
-      );
-    }
+    const newConfig = { ...config, [configKey]: newValue };
+    setConfig(newConfig);
+    saveConfigToLocalStorage(newConfig);
   };
 
   return (
@@ -312,12 +229,26 @@ const App = () => {
           <ControlsDrawerSection>
             <h2>Manage File</h2>
             <ControlWrapper>
-              <button type="button" onClick={handleConvertToPNG}>
+              <button
+                type="button"
+                onClick={() => {
+                  handleConvertToPNG(
+                    hexMapRef,
+                    mapDimensions.maxWidth,
+                    mapDimensions.maxHeight
+                  );
+                }}
+              >
                 Convert to PNG
               </button>
             </ControlWrapper>
             <ControlWrapper>
-              <button type="button" onClick={handleConvertToSVG}>
+              <button
+                type="button"
+                onClick={() => {
+                  handleConvertToSVG(hexMapRef);
+                }}
+              >
                 Open as SVG
               </button>
             </ControlWrapper>
@@ -342,9 +273,20 @@ const App = () => {
                 type="file"
                 accept="application/json"
                 onChange={(e) => {
-                  handleConfigImport(e.target.files);
+                  handleConfigImport(e.target.files, setConfig);
                 }}
               />
+            </ControlWrapper>
+            <ControlWrapper>
+              <button
+                className="error"
+                type="button"
+                onClick={() => {
+                  clearConfigFromLocalStorage(setConfig);
+                }}
+              >
+                Clear Data
+              </button>
             </ControlWrapper>
           </ControlsDrawerSection>
         </ControlsDrawer>
@@ -387,19 +329,41 @@ const App = () => {
                     strokeWidth="1"
                     onMouseDown={(e) => {
                       e.preventDefault();
-                      handleHexPress(index);
+                      handleHexPress({
+                        hexKey: index,
+                        isPointerDown,
+                        setIsPointerDown,
+                        config,
+                        setConfig,
+                      });
                     }}
                     onMouseOver={(e) => {
                       e.preventDefault();
-                      handleHexDrag(index);
+                      handleHexDrag({
+                        hexKey: index,
+                        isPointerDown,
+                        config,
+                        setConfig,
+                      });
                     }}
                     onTouchStart={(e) => {
                       e.preventDefault();
-                      handleHexPress(index);
+                      handleHexPress({
+                        hexKey: index,
+                        isPointerDown,
+                        setIsPointerDown,
+                        config,
+                        setConfig,
+                      });
                     }}
                     onTouchMove={(e) => {
                       e.preventDefault();
-                      handleHexDrag(index);
+                      handleHexDrag({
+                        hexKey: index,
+                        isPointerDown,
+                        config,
+                        setConfig,
+                      });
                     }}
                   />
                   {icons[index] && <path {...icons[index]} />}
