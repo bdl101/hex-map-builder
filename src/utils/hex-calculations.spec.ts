@@ -162,5 +162,37 @@ describe("Determining neightbors of hexes at specified coordinates", () => {
         [3, 2],
       ])
     );
+
+    // Random center hex
+    neighbors = determineHexNeighbors({
+      columnIndex: 1,
+      rowIndex: 1,
+      orientation: "pointedTopOddRow",
+      rowLength: 4,
+      columnLength: 4,
+    });
+    expect(neighbors).toHaveLength(6);
+    expect(neighbors).toEqual(
+      expect.arrayContaining([
+        [1, 0],
+        [2, 0],
+        [2, 1],
+        [2, 2],
+        [1, 2],
+        [0, 1],
+      ])
+    );
+  });
+
+  it("Should return the correct neighbors for pointed tops, shove even rows orientation", () => {
+    // TODO
+  });
+
+  it("Should return the correct neighbors for flat tops, shove odd columns orientation", () => {
+    // TODO
+  });
+
+  it("Should return the correct neighbors for flat tops, shove even columns orientation", () => {
+    // TODO
   });
 });

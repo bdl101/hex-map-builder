@@ -23,8 +23,10 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
-    "test:watch": "react-scripts test -w",
+    "test:unit": "react-scripts test",
+    "test:unit:watch": "react-scripts test -w",
+    "test:component": "cypress run --component --headless",
+    "test:component:watch": "cypress open --component",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build"
@@ -46,5 +48,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "cypress": "^13.5.1"
   }
 }
