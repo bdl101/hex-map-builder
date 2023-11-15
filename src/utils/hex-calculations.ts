@@ -4,6 +4,8 @@ import {
   HexOrientation,
   PointedTopsDirection,
   FlatTopsDirection,
+  DEFAULT_HEX_RADIUS,
+  DEFAULT_LABEL_FONT_SIZE,
 } from "../models";
 import { ANGLE } from "../models";
 
@@ -341,4 +343,19 @@ export const determineHexNeighbors = ({
   });
 
   return neighbors;
+};
+
+/** TODO */
+export const determineHexInnerDiameter = (hexRadius: number) => {
+  return Math.sqrt(3) * hexRadius;
+};
+
+/** TODO */
+export const determineRadiusRatioModifier = (hexRadius: number) => {
+  return hexRadius / DEFAULT_HEX_RADIUS;
+};
+
+/** TODO */
+export const determineLabelFontSizeByRatio = (ratio: number) => {
+  return Math.round(DEFAULT_LABEL_FONT_SIZE * ratio);
 };

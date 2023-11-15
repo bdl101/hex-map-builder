@@ -5,28 +5,6 @@ export interface HexMapConfig {
   columnCount: number;
   hexRadius: number;
   labelFormat: LabelFormatOption;
-  hexOrientation: HexOrientationOption;
-  terrainType: Terrain;
-  paintType: PaintType;
-  imageFormat: ImageFormatOption;
-  hexData: HexData;
-  showHexIcons: boolean;
-  useTerrainColors: boolean;
-  schemaVersion?: string;
-}
-
-export type HexStorage = Array<
-  Array<{
-    terrainType?: Terrain;
-  }>
->;
-
-// TODO: find a better way to manage this
-export interface HexMapConfig2 {
-  rowCount: number;
-  columnCount: number;
-  hexRadius: number;
-  labelFormat: LabelFormatOption;
   hexOrientation: HexOrientation;
   terrainType: Terrain;
   paintType: PaintType;
@@ -37,10 +15,16 @@ export interface HexMapConfig2 {
   hexStorage: HexStorage;
 }
 
+export type HexStorage = Array<
+  Array<{
+    terrainType?: Terrain;
+  }>
+>;
+
 export interface HexLabelData {
   x: number;
   y: number;
-  label: string;
+  text: string;
 }
 
 export type HexIconData = React.SVGAttributes<SVGPathElement> | undefined;
@@ -63,8 +47,6 @@ export type Terrain =
 
 export type LabelFormatOption = "none" | "numbersOnly" | "alphaX";
 
-export type HexOrientationOption = "pointTop" | "flatTop";
-
 /** TODO */
 export type HexOrientation =
   | "pointedTopEvenRow"
@@ -75,14 +57,6 @@ export type HexOrientation =
 export type ImageFormatOption = "fixed" | "contained";
 
 export type PaintType = "brush" | "bucket";
-
-export type HexData = Record<
-  number,
-  | {
-      terrainType: Terrain;
-    }
-  | undefined
->;
 
 export type CardinalDirection = (typeof CARDINAL_DIRECTIONS)[number];
 
@@ -98,3 +72,47 @@ export interface VectorMapItem {
   icon?: HexIconData;
   label?: HexLabelData;
 }
+
+// -- Deprecated -- //
+/** @deprecated */
+export interface HexMapConfig0 {
+  rowCount: number;
+  columnCount: number;
+  hexRadius: number;
+  labelFormat: LabelFormatOption;
+  hexOrientation: HexOrientationOption;
+  terrainType: Terrain;
+  paintType: PaintType;
+  imageFormat: ImageFormatOption;
+  hexData: HexData;
+  showHexIcons: boolean;
+  useTerrainColors: boolean;
+}
+
+/** @deprecated */
+export interface HexMapConfig01 {
+  rowCount: number;
+  columnCount: number;
+  hexRadius: number;
+  labelFormat: LabelFormatOption;
+  hexOrientation: HexOrientationOption;
+  terrainType: Terrain;
+  paintType: PaintType;
+  imageFormat: ImageFormatOption;
+  hexData: HexData;
+  showHexIcons: boolean;
+  useTerrainColors: boolean;
+  schemaVersion: string;
+}
+
+/** @deprecated */
+export type HexOrientationOption = "pointTop" | "flatTop";
+
+/** @deprecated */
+export type HexData = Record<
+  number,
+  | {
+      terrainType: Terrain;
+    }
+  | undefined
+>;

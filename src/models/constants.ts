@@ -2,25 +2,27 @@ import { HexMapConfig, Terrain } from "./hexmap-types";
 
 export const CONFIG_STORAGE_KEY = "hexmap-config";
 
-export const CURRENT_CONFIG_SCHEMA_VERSION = "0.1";
+export const CURRENT_CONFIG_SCHEMA_VERSION = "1";
 
 export const ANGLE = (2 * Math.PI) / 6;
 export const DEFAULT_ROW_COUNT = 3;
 export const DEFAULT_COLUMN_COUNT = 4;
 export const DEFAULT_HEX_RADIUS = 50;
+export const DEFAULT_LABEL_FONT_SIZE = 12;
 
 export const DEFAULT_HEXMAP_CONFIG: HexMapConfig = {
+  schemaVersion: "1",
   rowCount: DEFAULT_ROW_COUNT,
   columnCount: DEFAULT_COLUMN_COUNT,
   hexRadius: DEFAULT_HEX_RADIUS,
   terrainType: "none",
   paintType: "brush",
   labelFormat: "none",
-  hexOrientation: "pointTop",
-  hexData: {},
+  hexOrientation: "pointedTopOddRow",
   imageFormat: "contained",
-  showHexIcons: false,
+  showHexIcons: true,
   useTerrainColors: true,
+  hexStorage: [],
 };
 
 // [A-Z]

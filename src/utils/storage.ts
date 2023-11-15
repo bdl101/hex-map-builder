@@ -74,7 +74,9 @@ export const prepareHexStorage = (
     newStorage = newStorage.slice(0, rowCount);
   } else if (rowCount > existingStorage.length) {
     for (let i = existingStorage.length; i < rowCount; i++) {
-      newStorage.push(Array.from(Array(columnCount).map(() => ({}))));
+      // TODO: undo this
+      const emptyColumns = Array(columnCount).fill({ terrainType: "forest" });
+      newStorage.push(emptyColumns);
     }
   }
 
