@@ -1,19 +1,13 @@
 import { useMemo, useState, useRef } from "react";
 import { Global } from "@emotion/react";
 
-import {
-  DEFAULT_HEXMAP_CONFIG2,
-  HexMapConfig,
-  TERRAIN_HEX_COLOR_MAP,
-} from "./models";
+import { HexMapConfig, TERRAIN_HEX_COLOR_MAP } from "./models";
 import {
   handleHexDrag,
   handleHexPress,
   loadConfigFromLocalStorage,
   prepareHexStorage,
-  prepareVectorData,
   prepareVectorMapData,
-  prepareViewbox,
   prepareViewboxValues,
   saveConfigToLocalStorage,
 } from "./utils";
@@ -39,19 +33,31 @@ const App = () => {
   const [isControlDrawerOpen, setIsControlDrawerOpen] = useState(true);
   const [config, setConfig] = useState<HexMapConfig>(INITIAL_CONFIG);
 
-  const { paths, icons, labelData } = useMemo(() => {
-    return prepareVectorData(config);
+  const mapData = useMemo(() => {
+    return prepareVectorMapData(config);
   }, [config]);
 
-  const mapDimensions = useMemo(() => {
-    return prepareViewbox(config);
+  const viewboxValues = useMemo(() => {
+    return prepareViewboxValues(config);
   }, [config]);
 
   const handleConfigChange = <K extends keyof HexMapConfig>(
     configKey: K,
     newValue: HexMapConfig[K]
   ) => {
+    // TODO: update hex storage on row or col change
     const newConfig = { ...config, [configKey]: newValue };
+
+    console.log(newConfig.rowCount, newConfig.columnCount);
+
+    if (configKey === "columnCount" || configKey === "rowCount") {
+      newConfig.hexStorage = prepareHexStorage(
+        newConfig.rowCount,
+        newConfig.columnCount,
+        newConfig.hexStorage
+      );
+    }
+
     setConfig(newConfig);
     saveConfigToLocalStorage(newConfig);
   };
@@ -69,8 +75,8 @@ const App = () => {
           handleConfigChange={handleConfigChange}
           hexMapRef={hexMapRef}
           isControlDrawerOpen={isControlDrawerOpen}
-          mapMaxHeight={mapDimensions.maxHeight}
-          mapMaxWidth={mapDimensions.maxWidth}
+          mapMaxHeight={viewboxValues.maxHeight}
+          mapMaxWidth={viewboxValues.maxWidth}
           setConfig={setConfig}
         />
         <MapContainer
@@ -158,9 +164,19 @@ const App = () => {
             })}
           </svg> */}
           <svg
+            ref={hexMapRef}
             viewBox={viewboxValues.viewboxString}
-            width={viewboxValues.maxWidth}
-            height={viewboxValues.maxHeight}
+            width={
+              config.imageFormat === "fixed"
+                ? viewboxValues.maxWidth
+                : undefined
+            }
+            height={
+              config.imageFormat === "fixed"
+                ? viewboxValues.maxHeight
+                : undefined
+            }
+            // TODO: dynamic font size
             style={{ fontSize: "12px", fontFamily: "sans-serif" }}
           >
             {mapData.map((row, rowIndex) => (
@@ -171,6 +187,7 @@ const App = () => {
                       d={hex.hexPath}
                       stroke="#000"
                       // TODO: make stroke width proportional to the hex radius
+                      // TODO: make all of this properties of the hex
                       strokeWidth="1"
                       fill="transparent"
                     />

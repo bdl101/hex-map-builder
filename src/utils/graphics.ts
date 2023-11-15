@@ -21,7 +21,6 @@ import {
   determineRadiusRatioModifier,
   prepareHexOrigin,
   prepareVertices,
-  prepareVertices2,
 } from "./hex-calculations";
 
 /** Get the vector path string to draw a hexagon with the provided vertices. */
@@ -36,7 +35,7 @@ export const prepareHexPath = (vertices: Vertices) => {
 };
 
 /** Given a particular terrain type for a hex, prepare the render props needed for an icon vector path. */
-export const prepareHexIcon = (
+/* export const prepareHexIcon = (
   config: HexMapConfig,
   nodeKey: number,
   columnOffset: number,
@@ -71,10 +70,70 @@ export const prepareHexIcon = (
     ...TERRAIN_ICON_PROPS_MAP[terrainType],
     d: newPathString,
   };
+}; */
+
+/** Given a particular terrain type for a hex, prepare the render props needed for an icon vector path. */
+export const prepareHexIcon = ({
+  hexRadius,
+  showHexIcons,
+  terrainType,
+  originPoint,
+  hexOrientation,
+}: {
+  hexRadius: number;
+  terrainType: Terrain;
+  showHexIcons: boolean;
+  originPoint: {
+    xCoordinate: number;
+    yCoordinate: number;
+  };
+  hexOrientation: HexOrientation;
+}): HexIconData => {
+  if (!showHexIcons || terrainType === undefined || terrainType === "none") {
+    return undefined;
+  }
+  // The original icons paths were measured based on the default hex radius, so if that changed, we need to adjust the coordinates appropriately.
+  const sizeMultitplier = determineRadiusRatioModifier(hexRadius);
+  const hexInnerDiameter = determineHexInnerDiameter(hexRadius);
+  const originalPathString = `${TERRAIN_ICON_PROPS_MAP[terrainType].d}`;
+  let counter = 0;
+
+  let xOffset = 0;
+  let yOffset = 0;
+
+  switch (hexOrientation) {
+    case "pointedTopEvenRow":
+    case "pointedTopOddRow":
+      xOffset = originPoint.xCoordinate - 7 - hexInnerDiameter / 2;
+      yOffset = originPoint.yCoordinate - hexRadius;
+      break;
+    case "flatTopEvenColumn":
+    case "flatTopOddColumn":
+      xOffset = originPoint.xCoordinate - hexRadius;
+      yOffset = originPoint.yCoordinate - hexInnerDiameter / 2;
+      break;
+  }
+
+  // Find every coordinate in the path draw string, and update the value with the offset from the current hex column/row.
+  const newPathString = originalPathString.replace(
+    /(\d+)+/g,
+    (match, number) => {
+      const updatedCoordinate = `${(
+        parseFloat(number) * sizeMultitplier +
+        (counter % 2 === 0 ? xOffset : yOffset)
+      ).toFixed(2)}`;
+      counter++;
+      return updatedCoordinate;
+    }
+  );
+  return {
+    ...TERRAIN_ICON_PROPS_MAP[terrainType],
+    d: newPathString,
+  };
 };
 
 /** Get the vector text data to draw a coordinates label within the provided vertices. */
-export const prepareHexLabelData = (
+/* export const prepareHexLabelData = (
   vertices: Vertices,
   columnIndex: number,
   rowIndex: number,
@@ -139,10 +198,60 @@ export const prepareHexLabelData = (
       label: formattedLabelString,
     };
   }
+}; */
+
+/** Get the vector text data to draw a coordinates label within the provided vertices. */
+export const prepareHexLabelData = ({
+  originPoint,
+  hexRadius,
+  hexOrientation,
+  columnIndex,
+  rowIndex,
+  labelFormat,
+}: {
+  originPoint: {
+    xCoordinate: number;
+    yCoordinate: number;
+  };
+  hexRadius: number;
+  hexOrientation: HexOrientation;
+  columnIndex: number;
+  rowIndex: number;
+  labelFormat: LabelFormatOption;
+}): HexLabelData | undefined => {
+  if (labelFormat === "none") {
+    return undefined;
+  }
+  const { xCoordinate, yCoordinate } = originPoint;
+
+  // TODO: alphaX coordinates
+
+  const hexInnerDiameter = determineHexInnerDiameter(hexRadius);
+  const ratio = determineRadiusRatioModifier(hexRadius);
+  const fontSize = determineLabelFontSizeByRatio(ratio);
+
+  if (
+    hexOrientation === "pointedTopOddRow" ||
+    hexOrientation === "pointedTopEvenRow"
+  ) {
+    const xOffset = Math.round(ratio * 3);
+    return {
+      text: `${columnIndex},${rowIndex}`,
+      x: xCoordinate + xOffset - hexInnerDiameter / 2,
+      y: yCoordinate + fontSize - hexRadius / 2,
+    };
+  } else {
+    const xOffset = Math.round(ratio);
+    return {
+      text: `${columnIndex},${rowIndex}`,
+      x: xCoordinate + xOffset - hexRadius / 2,
+      y: yCoordinate + fontSize - hexInnerDiameter / 2,
+    };
+  }
 };
 
 /** Given a set of configurations, prepare the viewbox size for the hex map. */
-export const prepareViewbox = (config: HexMapConfig) => {
+/* export const prepareViewbox = (config: HexMapConfig) => {
   const { rowCount, columnCount, hexRadius, hexOrientation } = config;
   if (hexOrientation === "pointTop") {
     const columnOffset = hexRadius - hexRadius * Math.sin(ANGLE);
@@ -164,10 +273,37 @@ export const prepareViewbox = (config: HexMapConfig) => {
       2;
     return { maxWidth, maxHeight, viewBox: `0 0 ${maxWidth} ${maxHeight}` };
   }
+}; */
+
+/** Given a set of configurations, prepare the viewbox size for the hex map. */
+export const prepareViewboxValues = (
+  config: HexMapConfig
+  // TODO: use more specific props
+): { maxWidth: number; maxHeight: number; viewboxString: string } => {
+  const { rowCount, columnCount, hexRadius, hexOrientation } = config;
+  const hexInnerDiameter = determineHexInnerDiameter(hexRadius);
+
+  let maxWidth = 0;
+  let maxHeight = 0;
+  if (
+    hexOrientation === "pointedTopEvenRow" ||
+    hexOrientation === "pointedTopOddRow"
+  ) {
+    maxWidth = Math.round(
+      columnCount * hexInnerDiameter + 0.5 * hexInnerDiameter
+    );
+    maxHeight = Math.round(rowCount * hexRadius * 1.5 + hexRadius / 2);
+  } else {
+    maxHeight = Math.round(
+      rowCount * hexInnerDiameter + 0.5 * hexInnerDiameter
+    );
+    maxWidth = Math.round(columnCount * hexRadius * 1.5 + hexRadius / 2);
+  }
+  return { maxWidth, maxHeight, viewboxString: `0 0 ${maxWidth} ${maxHeight}` };
 };
 
 /** Get all vector data needed to output a hexmap. */
-export const prepareVectorData = (
+/* export const prepareVectorData = (
   config: HexMapConfig
 ): {
   paths: string[];
@@ -254,6 +390,58 @@ export const prepareVectorData = (
   }
 
   return { paths, icons, labelData };
+}; */
+
+/** Given a set of configurations, prepare the viewbox size for the hex map. */
+export const prepareVectorMapData = ({
+  hexStorage,
+  hexOrientation,
+  hexRadius,
+  showHexIcons,
+  terrainType,
+  labelFormat,
+}: HexMapConfig) => {
+  const vectorMapData = hexStorage.map((row, rowIndex) => {
+    return row.map((column, columnIndex) => {
+      const originPoint = prepareHexOrigin(
+        columnIndex,
+        rowIndex,
+        hexRadius,
+        hexOrientation
+      );
+      const hexVertices = prepareVertices(
+        originPoint.xCoordinate,
+        originPoint.yCoordinate,
+        hexRadius,
+        hexOrientation
+      );
+      const hexPath = prepareHexPath(hexVertices);
+      const hexLabel = prepareHexLabelData({
+        originPoint,
+        hexOrientation,
+        hexRadius,
+        columnIndex,
+        rowIndex,
+        labelFormat,
+      });
+      const hexIcon = prepareHexIcon({
+        hexRadius,
+        showHexIcons,
+        terrainType,
+        originPoint,
+        hexOrientation,
+      });
+
+      const hexData: VectorMapItem = {
+        hexPath,
+        label: hexLabel,
+        icon: hexIcon,
+      };
+      return hexData;
+    });
+  });
+
+  return vectorMapData;
 };
 
 /** Given a particular hex and new color, set the color of each connected hex with the same original color. */
@@ -262,7 +450,8 @@ export const paintBucket = (
   setConfig: Dispatch<SetStateAction<HexMapConfig>>,
   hexKey: number
 ) => {
-  const startNodeOriginalTerrain = config.hexData[hexKey]?.terrainType;
+  // TODO
+  /* const startNodeOriginalTerrain = config.hexData[hexKey]?.terrainType;
   const clearedNodes = new Set<number>();
   const nodesToClear = new Set<number>();
 
@@ -359,185 +548,5 @@ export const paintBucket = (
       ...config.hexData,
       ...newFills,
     },
-  });
-};
-
-/** TODO */
-export const prepareViewboxValues = (
-  config: HexMapConfig2
-  // TODO: use more specific props
-): { maxWidth: number; maxHeight: number; viewboxString: string } => {
-  const { rowCount, columnCount, hexRadius, hexOrientation } = config;
-  const hexInnerDiameter = determineHexInnerDiameter(hexRadius);
-
-  let maxWidth = 0;
-  let maxHeight = 0;
-  if (
-    hexOrientation === "pointedTopEvenRow" ||
-    hexOrientation === "pointedTopOddRow"
-  ) {
-    maxWidth = Math.round(
-      columnCount * hexInnerDiameter + 0.5 * hexInnerDiameter
-    );
-    maxHeight = Math.round(rowCount * hexRadius * 1.5 + hexRadius / 2);
-  } else {
-    maxHeight = Math.round(
-      rowCount * hexInnerDiameter + 0.5 * hexInnerDiameter
-    );
-    maxWidth = Math.round(columnCount * hexRadius * 1.5 + hexRadius / 2);
-  }
-  return { maxWidth, maxHeight, viewboxString: `0 0 ${maxWidth} ${maxHeight}` };
-};
-
-/** TODO */
-export const prepareVectorMapData = ({
-  hexStorage,
-  hexOrientation,
-  hexRadius,
-  showHexIcons,
-  terrainType,
-}: HexMapConfig2) => {
-  const vectorMapData = hexStorage.map((row, rowIndex) => {
-    return row.map((column, columnIndex) => {
-      const originPoint = prepareHexOrigin(
-        columnIndex,
-        rowIndex,
-        hexRadius,
-        hexOrientation
-      );
-      const hexVertices = prepareVertices2(
-        originPoint.xCoordinate,
-        originPoint.yCoordinate,
-        hexRadius,
-        hexOrientation
-      );
-      const hexPath = prepareHexPath(hexVertices);
-      const hexLabel = prepareHexLabelData2({
-        originPoint,
-        hexOrientation,
-        hexRadius,
-        columnIndex,
-        rowIndex,
-      });
-      const hexIcon = prepareHexIcon2({
-        hexRadius,
-        showHexIcons,
-        terrainType,
-        originPoint,
-        hexOrientation,
-      });
-
-      const hexData: VectorMapItem = {
-        hexPath,
-        label: hexLabel,
-        icon: hexIcon,
-      };
-      return hexData;
-    });
-  });
-
-  return vectorMapData;
-};
-
-/** TODO */
-export const prepareHexLabelData2 = ({
-  originPoint,
-  hexRadius,
-  hexOrientation,
-  columnIndex,
-  rowIndex,
-}: {
-  originPoint: {
-    xCoordinate: number;
-    yCoordinate: number;
-  };
-  hexRadius: number;
-  hexOrientation: HexOrientation;
-  columnIndex: number;
-  rowIndex: number;
-}): HexLabelData => {
-  const { xCoordinate, yCoordinate } = originPoint;
-
-  const hexInnerDiameter = determineHexInnerDiameter(hexRadius);
-  const ratio = determineRadiusRatioModifier(hexRadius);
-  const fontSize = determineLabelFontSizeByRatio(ratio);
-
-  if (
-    hexOrientation === "pointedTopOddRow" ||
-    hexOrientation === "pointedTopEvenRow"
-  ) {
-    const xOffset = Math.round(ratio * 3);
-    return {
-      text: `${columnIndex},${rowIndex}`,
-      x: xCoordinate + xOffset - hexInnerDiameter / 2,
-      y: yCoordinate + fontSize - hexRadius / 2,
-    };
-  } else {
-    const xOffset = Math.round(ratio);
-    return {
-      text: `${columnIndex},${rowIndex}`,
-      x: xCoordinate + xOffset - hexRadius / 2,
-      y: yCoordinate + fontSize - hexInnerDiameter / 2,
-    };
-  }
-};
-
-/** Given a particular terrain type for a hex, prepare the render props needed for an icon vector path. */
-export const prepareHexIcon2 = ({
-  hexRadius,
-  showHexIcons,
-  terrainType,
-  originPoint,
-  hexOrientation,
-}: {
-  hexRadius: number;
-  terrainType: Terrain;
-  showHexIcons: boolean;
-  originPoint: {
-    xCoordinate: number;
-    yCoordinate: number;
-  };
-  hexOrientation: HexOrientation;
-}): HexIconData => {
-  if (!showHexIcons || terrainType === undefined || terrainType === "none") {
-    return undefined;
-  }
-  // The original icons paths were measured based on the default hex radius, so if that changed, we need to adjust the coordinates appropriately.
-  const sizeMultitplier = determineRadiusRatioModifier(hexRadius);
-  const hexInnerDiameter = determineHexInnerDiameter(hexRadius);
-  const originalPathString = `${TERRAIN_ICON_PROPS_MAP[terrainType].d}`;
-  let counter = 0;
-
-  let xOffset = 0;
-  let yOffset = 0;
-
-  switch (hexOrientation) {
-    case "pointedTopEvenRow":
-    case "pointedTopOddRow":
-      xOffset = originPoint.xCoordinate - 7 - hexInnerDiameter / 2;
-      yOffset = originPoint.yCoordinate - hexRadius;
-      break;
-    case "flatTopEvenColumn":
-    case "flatTopOddColumn":
-      xOffset = originPoint.xCoordinate - hexRadius;
-      yOffset = originPoint.yCoordinate - hexInnerDiameter / 2;
-      break;
-  }
-
-  // Find every coordinate in the path draw string, and update the value with the offset from the current hex column/row.
-  const newPathString = originalPathString.replace(
-    /(\d+)+/g,
-    (match, number) => {
-      const updatedCoordinate = `${(
-        parseFloat(number) * sizeMultitplier +
-        (counter % 2 === 0 ? xOffset : yOffset)
-      ).toFixed(2)}`;
-      counter++;
-      return updatedCoordinate;
-    }
-  );
-  return {
-    ...TERRAIN_ICON_PROPS_MAP[terrainType],
-    d: newPathString,
-  };
+  }); */
 };

@@ -10,7 +10,7 @@ import {
 import { ANGLE } from "../models";
 
 /** Get the vertices for a hexagon centered at origin point x,y. The distance between any 2 vertices of the hexagon is 2r. */
-export const prepareVertices = (
+/* export const prepareVertices = (
   x: number,
   y: number,
   r: number,
@@ -29,10 +29,10 @@ export const prepareVertices = (
     }
   }
   return vertices;
-};
+}; */
 
 /** Get the vertices for a hexagon centered at origin point x,y. The distance between any 2 vertices of the hexagon is 2r. */
-export const prepareVertices2 = (
+export const prepareVertices = (
   x: number,
   y: number,
   r: number,

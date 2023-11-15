@@ -2,7 +2,7 @@ import { FC, RefObject, Dispatch, SetStateAction } from "react";
 
 import {
   HexMapConfig,
-  HexOrientationOption,
+  HexOrientation,
   ImageFormatOption,
   LabelFormatOption,
   PaintType,
@@ -96,12 +96,22 @@ export const ControlsDrawer: FC<ControlsDrawerProps> = ({
             onChange={(e) => {
               handleConfigChange(
                 "hexOrientation",
-                e.target.value as HexOrientationOption
+                e.target.value as HexOrientation
               );
             }}
           >
-            <option value={"pointTop"}>Pointed Tops</option>
-            <option value={"flatTop"}>Flat Tops</option>
+            <option value={"pointedTopOddRow"}>
+              Pointed Tops, Shove Odd Rows Right
+            </option>
+            <option value={"pointedTopEvenRow"}>
+              Pointed Tops, Shove Even Rows Right
+            </option>
+            <option value={"flatTopOddColumn"}>
+              Flat Tops, Shove Odd Columns Down
+            </option>
+            <option value={"flatTopEvenColumn"}>
+              Flat Tops, Shove Even Columns Down
+            </option>
           </select>
         </ControlWrapper>
         <ControlWrapper>

@@ -22,7 +22,11 @@ export const DEFAULT_HEXMAP_CONFIG: HexMapConfig = {
   imageFormat: "contained",
   showHexIcons: true,
   useTerrainColors: true,
-  hexStorage: [],
+  hexStorage: [
+    [{}, {}, {}, {}],
+    [{}, {}, {}, {}],
+    [{}, {}, {}, {}],
+  ],
 };
 
 // [A-Z]

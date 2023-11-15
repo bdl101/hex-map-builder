@@ -6,6 +6,7 @@ import {
   HexStorage,
 } from "../models";
 import { updateConfigToLatestVersion } from "./migrations";
+import { deepCopy } from "./deep-copy";
 
 /** TODO */
 export const handleConfigImport = (
@@ -69,26 +70,24 @@ export const prepareHexStorage = (
   columnCount: number,
   existingStorage: HexStorage
 ) => {
-  let newStorage: HexStorage = [...existingStorage];
+  let newStorage: HexStorage = deepCopy(existingStorage);
   if (rowCount < existingStorage.length) {
     newStorage = newStorage.slice(0, rowCount);
   } else if (rowCount > existingStorage.length) {
     for (let i = existingStorage.length; i < rowCount; i++) {
-      // TODO: undo this
-      const emptyColumns = Array(columnCount).fill({ terrainType: "forest" });
+      const emptyColumns = Array(columnCount).fill({});
       newStorage.push(emptyColumns);
     }
   }
 
-  newStorage.forEach((row) => {
+  newStorage.forEach((row, index) => {
     if (columnCount < row.length) {
-      row = row.slice(0, columnCount);
+      newStorage[index] = row.slice(0, columnCount);
     } else if (columnCount > row.length) {
       for (let i = row.length; i < columnCount; i++) {
         row.push({});
       }
     }
-    return row;
   });
 
   return newStorage;

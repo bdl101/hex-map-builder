@@ -22,7 +22,9 @@ export const handleHexPress = ({
       paintBucket(config, setConfig, hexKey);
     }
   }
-  if (
+
+  // TODO: maybe move this into graphics?
+  /* if (
     config.paintType === "brush" &&
     config.hexData[hexKey]?.terrainType !== config.terrainType
   ) {
@@ -33,7 +35,7 @@ export const handleHexPress = ({
         [hexKey]: { terrainType: config.terrainType },
       },
     });
-  }
+  } */
 };
 
 /** TODO */
@@ -48,7 +50,7 @@ export const handleHexDrag = ({
   config: HexMapConfig;
   setConfig: Dispatch<SetStateAction<HexMapConfig>>;
 }) => {
-  if (
+  /* if (
     isPointerDown &&
     config.hexData[hexKey]?.terrainType !== config.terrainType &&
     config.paintType === "brush"
@@ -60,5 +62,5 @@ export const handleHexDrag = ({
         [hexKey]: { terrainType: config.terrainType },
       },
     });
-  }
+  } */
 };

@@ -27,6 +27,8 @@ export const MainContainer = styled.main`
   height: 100vh;
 `;
 
+// TODO: hover styles for brush and bucket
+
 export const MapContainer = styled.div<{ isContained?: boolean }>`
   background: #fff;
   border: 1px solid #000;
