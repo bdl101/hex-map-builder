@@ -11,10 +11,16 @@ import {
   DEFAULT_HEX_RADIUS,
   TERRAIN_ICON_PROPS_MAP,
   UPPER_ALPHA_INDICES,
+  HexMapConfig2,
+  VectorMapItem,
 } from "../models";
-import { prepareVertices } from "./hex-calculations";
+import {
+  prepareHexOrigin,
+  prepareVertices,
+  prepareVertices2,
+} from "./hex-calculations";
 
-/** Get the vector path data to draw a hexagon with the provided vertices. */
+/** Get the vector path string to draw a hexagon with the provided vertices. */
 export const prepareHexPath = (vertices: Vertices) => {
   return vertices.reduce((accumulator, currentValue, index) => {
     accumulator +=
@@ -350,4 +356,54 @@ export const paintBucket = (
       ...newFills,
     },
   });
+};
+
+/** TODO */
+export const prepareViewboxValues = (
+  config: HexMapConfig2
+): { maxWidth: number; maxHeight: number; viewboxString: string } => {
+  const { rowCount, columnCount, hexRadius, hexOrientation } = config;
+  const hexInnerWidth = Math.sqrt(3) * hexRadius;
+
+  let maxWidth = 0;
+  let maxHeight = 0;
+  if (
+    hexOrientation === "pointedTopEvenRow" ||
+    hexOrientation === "pointedTopOddRow"
+  ) {
+    maxWidth = Math.round(columnCount * hexInnerWidth + 0.5 * hexInnerWidth);
+    maxHeight = Math.round(rowCount * hexRadius * 1.5 + hexRadius / 2);
+  } else {
+    maxHeight = Math.round(rowCount * hexInnerWidth + 0.5 * hexInnerWidth);
+    maxWidth = Math.round(columnCount * hexRadius * 1.5 + hexRadius / 2);
+  }
+  return { maxWidth, maxHeight, viewboxString: `0 0 ${maxWidth} ${maxHeight}` };
+};
+
+/** TODO */
+export const prepareVectorMapData = (config: HexMapConfig2) => {
+  const { hexStorage, hexOrientation, hexRadius } = config;
+
+  const vectorMapData = hexStorage.map((row, rowIndex) => {
+    return row.map((column, columnIndex) => {
+      const originPoint = prepareHexOrigin(
+        columnIndex,
+        rowIndex,
+        hexRadius,
+        hexOrientation
+      );
+      const hexVertices = prepareVertices2(
+        originPoint.xCoordinate,
+        originPoint.yCoordinate,
+        hexRadius,
+        hexOrientation
+      );
+      const hexPath = prepareHexPath(hexVertices);
+      const hexData: VectorMapItem = { hexPath };
+
+      return hexData;
+    });
+  });
+
+  return vectorMapData;
 };

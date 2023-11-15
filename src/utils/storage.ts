@@ -3,6 +3,7 @@ import {
   CONFIG_STORAGE_KEY,
   DEFAULT_HEXMAP_CONFIG,
   HexMapConfig,
+  HexStorage,
 } from "../models";
 import { updateConfigToLatestVersion } from "./migrations";
 
@@ -60,4 +61,33 @@ export const clearConfigFromLocalStorage = (
     localStorage.removeItem(CONFIG_STORAGE_KEY);
     setConfig(DEFAULT_HEXMAP_CONFIG);
   }
+};
+
+/** TODO */
+export const prepareHexStorage = (
+  rowCount: number,
+  columnCount: number,
+  existingStorage: HexStorage
+) => {
+  let newStorage: HexStorage = [...existingStorage];
+  if (rowCount < existingStorage.length) {
+    newStorage = newStorage.slice(0, rowCount);
+  } else if (rowCount > existingStorage.length) {
+    for (let i = existingStorage.length; i < rowCount; i++) {
+      newStorage.push(Array.from(Array(columnCount).map(() => ({}))));
+    }
+  }
+
+  newStorage.forEach((row) => {
+    if (columnCount < row.length) {
+      row = row.slice(0, columnCount);
+    } else if (columnCount > row.length) {
+      for (let i = row.length; i < columnCount; i++) {
+        row.push({});
+      }
+    }
+    return row;
+  });
+
+  return newStorage;
 };

@@ -15,6 +15,12 @@ export interface HexMapConfig {
   schemaVersion?: string;
 }
 
+export type HexStorage = Array<
+  Array<{
+    terrainType?: Terrain;
+  }>
+>;
+
 // TODO: find a better way to manage this
 export interface HexMapConfig2 {
   rowCount: number;
@@ -28,14 +34,7 @@ export interface HexMapConfig2 {
   showHexIcons: boolean;
   useTerrainColors: boolean;
   schemaVersion: string;
-  hexStorage: Array<
-    Array<
-      | {
-          terrainType: Terrain;
-        }
-      | undefined
-    >
-  >;
+  hexStorage: HexStorage;
 }
 
 export interface HexLabelData {
@@ -93,3 +92,9 @@ export type PointedTopsDirection = Exclude<
 >;
 
 export type FlatTopsDirection = Exclude<CardinalDirection, "east" | "west">;
+
+export interface VectorMapItem {
+  hexPath: string;
+  icon?: HexIconData;
+  label?: HexLabelData;
+}

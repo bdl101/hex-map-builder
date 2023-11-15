@@ -29,6 +29,31 @@ export const prepareVertices = (
   return vertices;
 };
 
+/** Get the vertices for a hexagon centered at origin point x,y. The distance between any 2 vertices of the hexagon is 2r. */
+export const prepareVertices2 = (
+  x: number,
+  y: number,
+  r: number,
+  orientation: HexOrientation
+) => {
+  const vertices: Vertices = [];
+  for (var i = 0; i < 6; i++) {
+    if (
+      orientation === "pointedTopOddRow" ||
+      orientation === "pointedTopEvenRow"
+    ) {
+      const xCoordinate = x + r * Math.sin(ANGLE * i);
+      const yCoordinate = y + r * Math.cos(ANGLE * i);
+      vertices.push([xCoordinate, yCoordinate]);
+    } else {
+      const xCoordinate = x + r * Math.cos(ANGLE * i);
+      const yCoordinate = y + r * Math.sin(ANGLE * i);
+      vertices.push([xCoordinate, yCoordinate]);
+    }
+  }
+  return vertices;
+};
+
 /** Given a particular row, column, hex radius, and hex orientation, determine the origin point (center x,y) for a hex. */
 export const prepareHexOrigin = (
   columnIndex: number,

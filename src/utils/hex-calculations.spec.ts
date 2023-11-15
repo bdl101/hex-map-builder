@@ -185,14 +185,266 @@ describe("Determining neightbors of hexes at specified coordinates", () => {
   });
 
   it("Should return the correct neighbors for pointed tops, shove even rows orientation", () => {
-    // TODO
+    // Top-left corner hex
+    let neighbors = determineHexNeighbors({
+      columnIndex: 0,
+      rowIndex: 0,
+      orientation: "pointedTopEvenRow",
+      rowLength: 4,
+      columnLength: 4,
+    });
+    expect(neighbors).toHaveLength(3);
+    expect(neighbors).toEqual(
+      expect.arrayContaining([
+        [0, 1],
+        [1, 0],
+        [1, 1],
+      ])
+    );
+
+    // Top-right corner hex
+    neighbors = determineHexNeighbors({
+      columnIndex: 3,
+      rowIndex: 0,
+      orientation: "pointedTopEvenRow",
+      rowLength: 4,
+      columnLength: 4,
+    });
+    expect(neighbors).toHaveLength(2);
+    expect(neighbors).toEqual(
+      expect.arrayContaining([
+        [2, 0],
+        [3, 1],
+      ])
+    );
+
+    // Bottom-left corner hex
+    neighbors = determineHexNeighbors({
+      columnIndex: 0,
+      rowIndex: 3,
+      orientation: "pointedTopEvenRow",
+      rowLength: 4,
+      columnLength: 4,
+    });
+    expect(neighbors).toHaveLength(2);
+    expect(neighbors).toEqual(
+      expect.arrayContaining([
+        [0, 2],
+        [1, 3],
+      ])
+    );
+
+    // Bottom-right corner hex
+    neighbors = determineHexNeighbors({
+      columnIndex: 3,
+      rowIndex: 3,
+      orientation: "pointedTopEvenRow",
+      rowLength: 4,
+      columnLength: 4,
+    });
+    expect(neighbors).toHaveLength(3);
+    expect(neighbors).toEqual(
+      expect.arrayContaining([
+        [2, 3],
+        [3, 2],
+        [2, 2],
+      ])
+    );
+
+    // Random center hex
+    neighbors = determineHexNeighbors({
+      columnIndex: 1,
+      rowIndex: 1,
+      orientation: "pointedTopEvenRow",
+      rowLength: 4,
+      columnLength: 4,
+    });
+    expect(neighbors).toHaveLength(6);
+    expect(neighbors).toEqual(
+      expect.arrayContaining([
+        [0, 0],
+        [1, 0],
+        [2, 1],
+        [1, 2],
+        [0, 2],
+        [0, 1],
+      ])
+    );
   });
 
   it("Should return the correct neighbors for flat tops, shove odd columns orientation", () => {
-    // TODO
+    // Top-left corner hex
+    let neighbors = determineHexNeighbors({
+      columnIndex: 0,
+      rowIndex: 0,
+      orientation: "flatTopOddColumn",
+      rowLength: 4,
+      columnLength: 4,
+    });
+    expect(neighbors).toHaveLength(2);
+    expect(neighbors).toEqual(
+      expect.arrayContaining([
+        [0, 1],
+        [1, 0],
+      ])
+    );
+
+    // Top-right corner hex
+    neighbors = determineHexNeighbors({
+      columnIndex: 3,
+      rowIndex: 0,
+      orientation: "flatTopOddColumn",
+      rowLength: 4,
+      columnLength: 4,
+    });
+    expect(neighbors).toHaveLength(3);
+    expect(neighbors).toEqual(
+      expect.arrayContaining([
+        [2, 0],
+        [2, 1],
+        [3, 1],
+      ])
+    );
+
+    // Bottom-left corner hex
+    neighbors = determineHexNeighbors({
+      columnIndex: 0,
+      rowIndex: 3,
+      orientation: "flatTopOddColumn",
+      rowLength: 4,
+      columnLength: 4,
+    });
+    expect(neighbors).toHaveLength(3);
+    expect(neighbors).toEqual(
+      expect.arrayContaining([
+        [0, 2],
+        [1, 2],
+        [1, 3],
+      ])
+    );
+
+    // Bottom-right corner hex
+    neighbors = determineHexNeighbors({
+      columnIndex: 3,
+      rowIndex: 3,
+      orientation: "flatTopOddColumn",
+      rowLength: 4,
+      columnLength: 4,
+    });
+    expect(neighbors).toHaveLength(2);
+    expect(neighbors).toEqual(
+      expect.arrayContaining([
+        [2, 3],
+        [3, 2],
+      ])
+    );
+
+    // Random center hex
+    neighbors = determineHexNeighbors({
+      columnIndex: 1,
+      rowIndex: 1,
+      orientation: "flatTopOddColumn",
+      rowLength: 4,
+      columnLength: 4,
+    });
+    expect(neighbors).toHaveLength(6);
+    expect(neighbors).toEqual(
+      expect.arrayContaining([
+        [0, 1],
+        [1, 0],
+        [2, 1],
+        [2, 2],
+        [1, 2],
+        [0, 2],
+      ])
+    );
   });
 
   it("Should return the correct neighbors for flat tops, shove even columns orientation", () => {
-    // TODO
+    // Top-left corner hex
+    let neighbors = determineHexNeighbors({
+      columnIndex: 0,
+      rowIndex: 0,
+      orientation: "flatTopEvenColumn",
+      rowLength: 4,
+      columnLength: 4,
+    });
+    expect(neighbors).toHaveLength(3);
+    expect(neighbors).toEqual(
+      expect.arrayContaining([
+        [0, 1],
+        [1, 0],
+        [1, 1],
+      ])
+    );
+
+    // Top-right corner hex
+    neighbors = determineHexNeighbors({
+      columnIndex: 3,
+      rowIndex: 0,
+      orientation: "flatTopEvenColumn",
+      rowLength: 4,
+      columnLength: 4,
+    });
+    expect(neighbors).toHaveLength(2);
+    expect(neighbors).toEqual(
+      expect.arrayContaining([
+        [2, 0],
+        [3, 1],
+      ])
+    );
+
+    // Bottom-left corner hex
+    neighbors = determineHexNeighbors({
+      columnIndex: 0,
+      rowIndex: 3,
+      orientation: "flatTopEvenColumn",
+      rowLength: 4,
+      columnLength: 4,
+    });
+    expect(neighbors).toHaveLength(2);
+    expect(neighbors).toEqual(
+      expect.arrayContaining([
+        [0, 2],
+        [1, 3],
+      ])
+    );
+
+    // Bottom-right corner hex
+    neighbors = determineHexNeighbors({
+      columnIndex: 3,
+      rowIndex: 3,
+      orientation: "flatTopEvenColumn",
+      rowLength: 4,
+      columnLength: 4,
+    });
+    expect(neighbors).toHaveLength(3);
+    expect(neighbors).toEqual(
+      expect.arrayContaining([
+        [2, 3],
+        [2, 2],
+        [3, 2],
+      ])
+    );
+
+    // Random center hex
+    neighbors = determineHexNeighbors({
+      columnIndex: 1,
+      rowIndex: 1,
+      orientation: "flatTopEvenColumn",
+      rowLength: 4,
+      columnLength: 4,
+    });
+    expect(neighbors).toHaveLength(6);
+    expect(neighbors).toEqual(
+      expect.arrayContaining([
+        [0, 0],
+        [1, 0],
+        [2, 0],
+        [2, 1],
+        [1, 2],
+        [0, 1],
+      ])
+    );
   });
 });
