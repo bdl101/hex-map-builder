@@ -1,4 +1,4 @@
-import { SetStateAction, Dispatch } from "react";
+import { SetStateAction, Dispatch, SVGAttributes } from "react";
 import {
   Vertices,
   HexLabelData,
@@ -14,6 +14,7 @@ import {
   VectorMapItem,
   HexOrientation,
   Terrain,
+  TERRAIN_HEX_COLOR_MAP,
 } from "../models";
 import {
   determineHexInnerDiameter,
@@ -32,6 +33,31 @@ export const prepareHexPath = (vertices: Vertices) => {
         : ` L ${currentValue[0]} ${currentValue[1]}`;
     return accumulator;
   }, `M ${vertices[5][0]} ${vertices[5][1]} `);
+};
+
+/** TODO */
+export const prepareHexShell = ({
+  vertices,
+  hexRadius,
+  terrainType,
+  useTerrainColors,
+}: {
+  vertices: Vertices;
+  hexRadius: number;
+  terrainType?: Terrain;
+  useTerrainColors: boolean;
+}): SVGAttributes<SVGPathElement> => {
+  const ratio = determineRadiusRatioModifier(hexRadius);
+
+  return {
+    d: prepareHexPath(vertices),
+    fill:
+      terrainType && useTerrainColors
+        ? TERRAIN_HEX_COLOR_MAP[terrainType]
+        : "transparent",
+    stroke: "#000",
+    strokeWidth: Math.round(ratio),
+  };
 };
 
 /** Given a particular terrain type for a hex, prepare the render props needed for an icon vector path. */
@@ -81,7 +107,7 @@ export const prepareHexIcon = ({
   hexOrientation,
 }: {
   hexRadius: number;
-  terrainType: Terrain;
+  terrainType?: Terrain;
   showHexIcons: boolean;
   originPoint: {
     xCoordinate: number;
@@ -104,13 +130,15 @@ export const prepareHexIcon = ({
   switch (hexOrientation) {
     case "pointedTopEvenRow":
     case "pointedTopOddRow":
-      xOffset = originPoint.xCoordinate - 7 - hexInnerDiameter / 2;
+      xOffset =
+        originPoint.xCoordinate - 7 * sizeMultitplier - hexInnerDiameter / 2;
       yOffset = originPoint.yCoordinate - hexRadius;
       break;
     case "flatTopEvenColumn":
     case "flatTopOddColumn":
       xOffset = originPoint.xCoordinate - hexRadius;
-      yOffset = originPoint.yCoordinate - hexInnerDiameter / 2;
+      yOffset =
+        originPoint.yCoordinate - 7 * sizeMultitplier - hexInnerDiameter / 2;
       break;
   }
 
@@ -129,6 +157,7 @@ export const prepareHexIcon = ({
   return {
     ...TERRAIN_ICON_PROPS_MAP[terrainType],
     d: newPathString,
+    strokeWidth: Math.round(sizeMultitplier * 2),
   };
 };
 
@@ -398,7 +427,7 @@ export const prepareVectorMapData = ({
   hexOrientation,
   hexRadius,
   showHexIcons,
-  terrainType,
+  useTerrainColors,
   labelFormat,
 }: HexMapConfig) => {
   const vectorMapData = hexStorage.map((row, rowIndex) => {
@@ -415,7 +444,12 @@ export const prepareVectorMapData = ({
         hexRadius,
         hexOrientation
       );
-      const hexPath = prepareHexPath(hexVertices);
+      const hexShell = prepareHexShell({
+        vertices: hexVertices,
+        hexRadius,
+        terrainType: column.terrainType,
+        useTerrainColors,
+      });
       const hexLabel = prepareHexLabelData({
         originPoint,
         hexOrientation,
@@ -427,13 +461,13 @@ export const prepareVectorMapData = ({
       const hexIcon = prepareHexIcon({
         hexRadius,
         showHexIcons,
-        terrainType,
+        terrainType: column.terrainType,
         originPoint,
         hexOrientation,
       });
 
       const hexData: VectorMapItem = {
-        hexPath,
+        hexShell,
         label: hexLabel,
         icon: hexIcon,
       };
@@ -442,111 +476,4 @@ export const prepareVectorMapData = ({
   });
 
   return vectorMapData;
-};
-
-/** Given a particular hex and new color, set the color of each connected hex with the same original color. */
-export const paintBucket = (
-  config: HexMapConfig,
-  setConfig: Dispatch<SetStateAction<HexMapConfig>>,
-  hexKey: number
-) => {
-  // TODO
-  /* const startNodeOriginalTerrain = config.hexData[hexKey]?.terrainType;
-  const clearedNodes = new Set<number>();
-  const nodesToClear = new Set<number>();
-
-  const traverseHexTree = (currentNodeKey: number) => {
-    clearedNodes.add(currentNodeKey);
-
-    const columnStartIndex =
-      Math.floor(currentNodeKey / config.columnCount) * config.columnCount;
-    const columnEndIndex = columnStartIndex + config.columnCount - 1;
-
-    const leftAdjacentNode = Math.max(currentNodeKey - 1, columnStartIndex);
-    const rightAdjacentNode = Math.min(currentNodeKey + 1, columnEndIndex);
-
-    const traversalTree: number[] = [leftAdjacentNode, rightAdjacentNode];
-
-    const isEvenRow = Math.floor(currentNodeKey / config.columnCount) % 2 === 0;
-
-    let topLeftNode: number | undefined = undefined;
-    if (isEvenRow && currentNodeKey !== columnStartIndex) {
-      topLeftNode = currentNodeKey - (config.columnCount + 1);
-    } else if (!isEvenRow) {
-      topLeftNode = currentNodeKey - config.columnCount;
-    }
-    if (topLeftNode !== undefined && topLeftNode >= 0) {
-      traversalTree.push(topLeftNode);
-    }
-
-    let topRightNode: number | undefined = undefined;
-    if (!isEvenRow && currentNodeKey !== columnEndIndex) {
-      topRightNode = currentNodeKey - (config.columnCount - 1);
-    } else if (isEvenRow) {
-      topRightNode = currentNodeKey - config.columnCount;
-    }
-    if (topRightNode !== undefined && topRightNode >= 0) {
-      traversalTree.push(topRightNode);
-    }
-
-    let bottomLeftNode: number | undefined = undefined;
-    if (isEvenRow && currentNodeKey !== columnStartIndex) {
-      bottomLeftNode = currentNodeKey + (config.columnCount - 1);
-    } else if (!isEvenRow) {
-      bottomLeftNode = currentNodeKey + config.columnCount;
-    }
-    if (
-      bottomLeftNode !== undefined &&
-      bottomLeftNode < config.columnCount * config.rowCount
-    ) {
-      traversalTree.push(bottomLeftNode);
-    }
-
-    let bottomRightNode: number | undefined = undefined;
-    if (!isEvenRow && currentNodeKey !== columnEndIndex) {
-      bottomRightNode = currentNodeKey + (config.columnCount + 1);
-    } else if (isEvenRow) {
-      bottomRightNode = currentNodeKey + config.columnCount;
-    }
-    if (
-      bottomRightNode !== undefined &&
-      bottomRightNode < config.columnCount * config.rowCount
-    ) {
-      traversalTree.push(bottomRightNode);
-    }
-
-    traversalTree.forEach((nodeKey) => {
-      if (
-        !clearedNodes.has(nodeKey) &&
-        config.hexData[nodeKey]?.terrainType === startNodeOriginalTerrain &&
-        config.hexData[nodeKey]?.terrainType !== config.terrainType
-      ) {
-        nodesToClear.add(nodeKey);
-      }
-    });
-  };
-
-  traverseHexTree(hexKey);
-
-  while (nodesToClear.size > 0) {
-    const [currentNodeKey] = nodesToClear;
-    nodesToClear.delete(currentNodeKey);
-    traverseHexTree(currentNodeKey);
-  }
-
-  const newFills: HexData = {};
-  clearedNodes.forEach((node) => {
-    newFills[node] = {
-      ...config.hexData[node],
-      terrainType: config.terrainType,
-    };
-  });
-
-  setConfig({
-    ...config,
-    hexData: {
-      ...config.hexData,
-      ...newFills,
-    },
-  }); */
 };

@@ -43,7 +43,10 @@ export const MapContainer = styled.div<{ isContained?: boolean }>`
     max-width: ${({ isContained }) => (isContained ? "100%" : "unset")};
     text {
       fill: #000;
-      font: 12px sans-serif;
+    }
+    g > g:hover {
+      cursor: pointer;
+      opacity: 0.7;
     }
   }
 `;

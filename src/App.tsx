@@ -3,6 +3,8 @@ import { Global } from "@emotion/react";
 
 import { HexMapConfig, TERRAIN_HEX_COLOR_MAP } from "./models";
 import {
+  determineLabelFontSizeByRatio,
+  determineRadiusRatioModifier,
   handleHexDrag,
   handleHexPress,
   loadConfigFromLocalStorage,
@@ -29,6 +31,7 @@ const viewboxValues = prepareViewboxValues(DEFAULT_HEXMAP_CONFIG2); */
 const App = () => {
   const hexMapRef = useRef<SVGSVGElement>(null);
 
+  // TODO: lift pointer when window loses focus
   const [isPointerDown, setIsPointerDown] = useState(false);
   const [isControlDrawerOpen, setIsControlDrawerOpen] = useState(true);
   const [config, setConfig] = useState<HexMapConfig>(INITIAL_CONFIG);
@@ -40,6 +43,11 @@ const App = () => {
   const viewboxValues = useMemo(() => {
     return prepareViewboxValues(config);
   }, [config]);
+
+  const resolvedLabelFontSize = useMemo(() => {
+    const ratio = determineRadiusRatioModifier(config.hexRadius);
+    return determineLabelFontSizeByRatio(ratio);
+  }, [config.hexRadius]);
 
   const handleConfigChange = <K extends keyof HexMapConfig>(
     configKey: K,
@@ -176,21 +184,37 @@ const App = () => {
                 ? viewboxValues.maxHeight
                 : undefined
             }
-            // TODO: dynamic font size
-            style={{ fontSize: "12px", fontFamily: "sans-serif" }}
+            style={{
+              fontSize: resolvedLabelFontSize,
+              fontFamily: "sans-serif",
+            }}
           >
             {mapData.map((row, rowIndex) => (
               <g key={`row-${rowIndex}`}>
                 {row.map((hex, columnIndex) => (
-                  <g key={`column-${columnIndex}`}>
-                    <path
-                      d={hex.hexPath}
-                      stroke="#000"
-                      // TODO: make stroke width proportional to the hex radius
-                      // TODO: make all of this properties of the hex
-                      strokeWidth="1"
-                      fill="transparent"
-                    />
+                  <g
+                    key={`column-${columnIndex}`}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handleHexPress({
+                        hexKey: [columnIndex, rowIndex],
+                        isPointerDown,
+                        setIsPointerDown,
+                        config,
+                        setConfig,
+                      });
+                    }}
+                    onMouseOver={(e) => {
+                      e.preventDefault();
+                      handleHexDrag({
+                        hexKey: [columnIndex, rowIndex],
+                        isPointerDown,
+                        config,
+                        setConfig,
+                      });
+                    }}
+                  >
+                    <path {...hex.hexShell} />
                     {hex.label && (
                       <text x={hex.label.x} y={hex.label.y}>
                         {hex.label.text}

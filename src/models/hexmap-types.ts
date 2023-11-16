@@ -68,7 +68,7 @@ export type PointedTopsDirection = Exclude<
 export type FlatTopsDirection = Exclude<CardinalDirection, "east" | "west">;
 
 export interface VectorMapItem {
-  hexPath: string;
+  hexShell: React.SVGAttributes<SVGPathElement>;
   icon?: HexIconData;
   label?: HexLabelData;
 }
