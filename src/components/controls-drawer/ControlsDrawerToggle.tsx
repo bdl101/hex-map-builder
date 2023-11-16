@@ -2,7 +2,7 @@ import { Dispatch, FC, SetStateAction } from "react";
 
 import { ControlsDrawerToggleButton } from "./ControlsDrawer.styles";
 
-/** TODO */
+/** The toggle button used to open and close the controls drawer. */
 export const ControlsDrawerToggle: FC<{
   isControlDrawerOpen: boolean;
   setIsControlDrawerOpen: Dispatch<SetStateAction<boolean>>;

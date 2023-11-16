@@ -47,7 +47,7 @@ export type Terrain =
 
 export type LabelFormatOption = "none" | "numbersOnly" | "alphaX";
 
-/** TODO */
+/** The orienation of the hexes on the map. `pointedTopEvenRow` has the even rows shoved right, `pointedTopOddRow` has the odd rows shoved right, `flatTopEvenColumn` has the even columns shoved down, and `flatTopOddColumn` has the odd columns shoved down. */
 export type HexOrientation =
   | "pointedTopEvenRow"
   | "pointedTopOddRow"

@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { Global } from "@emotion/react";
 
 import { HexMapConfig } from "./models";
@@ -20,10 +20,12 @@ import { GLOBAL_STYLES, MainContainer, MapContainer } from "./App.styles";
 
 const INITIAL_CONFIG = loadConfigFromLocalStorage();
 
+// TODO: run add more integration tests
+// TODO: run unit and integration tests before publishing
+
 const App = () => {
   const hexMapRef = useRef<SVGSVGElement>(null);
 
-  // TODO: lift pointer when window loses focus
   const [isPointerDown, setIsPointerDown] = useState(false);
   const [isControlDrawerOpen, setIsControlDrawerOpen] = useState(true);
   const [config, setConfig] = useState<HexMapConfig>(INITIAL_CONFIG);
@@ -59,6 +61,15 @@ const App = () => {
     saveConfigToLocalStorage(newConfig);
   };
 
+  // Lift the pointer when the document loses focus.
+  useEffect(() => {
+    document.addEventListener("visibilitychange", () => {
+      if (!(document.visibilityState === "visible")) {
+        setIsPointerDown(false);
+      }
+    });
+  }, []);
+
   return (
     <>
       <Global styles={GLOBAL_STYLES} />
@@ -78,6 +89,9 @@ const App = () => {
         />
         <MapContainer
           isContained={config.imageFormat === "contained"}
+          onMouseLeave={() => {
+            setIsPointerDown(false);
+          }}
           onMouseUp={() => {
             setIsPointerDown(false);
           }}

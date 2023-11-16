@@ -20,6 +20,7 @@ import {
   handleConfigImport,
   handleConvertToPNG,
   handleConvertToSVG,
+  prepareConfigExportUrl,
 } from "../../utils";
 
 interface ControlsDrawerProps {
@@ -35,7 +36,7 @@ interface ControlsDrawerProps {
   mapMaxHeight: number;
 }
 
-/** TODO */
+/** The Drawer component that contains the controls to modify the map configuration values, export/import map data etc. */
 export const ControlsDrawer: FC<ControlsDrawerProps> = ({
   config,
   handleConfigChange,
@@ -223,11 +224,7 @@ export const ControlsDrawer: FC<ControlsDrawerProps> = ({
         </ControlWrapper>
         <ControlWrapper>
           <a
-            href={URL.createObjectURL(
-              new Blob([JSON.stringify(config)], {
-                type: "application/json",
-              })
-            )}
+            href={prepareConfigExportUrl(config)}
             download={"hex-map-build-config.json"}
           >
             Download JSON

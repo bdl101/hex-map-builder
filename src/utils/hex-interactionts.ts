@@ -4,7 +4,7 @@ import { deepCopy } from "./deep-copy";
 import { determineHexNeighbors } from "./hex-calculations";
 import { saveConfigToLocalStorage } from "./storage";
 
-/** TODO */
+/** Handle any press event on a single hex.  */
 export const handleHexPress = ({
   hexKey,
   isPointerDown,
@@ -44,7 +44,7 @@ export const handleHexPress = ({
   }
 };
 
-/** TODO */
+/** Handle and drag event on a single hex. Only fires if the user is already pressing down. */
 export const handleHexDrag = ({
   hexKey,
   isPointerDown,

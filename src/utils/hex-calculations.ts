@@ -84,7 +84,7 @@ export const prepareHexOrigin = (
   };
 };
 
-/** TODO */
+/** Determine the coordinates of the immediate neighbor for a pointed top hex in the specified direction. */
 const determinePointedTopEvenRowNeighbor = (
   columnIndex: number,
   rowIndex: number,
@@ -119,7 +119,7 @@ const determinePointedTopEvenRowNeighbor = (
   return [columnIndex + diff[0], rowIndex + diff[1]];
 };
 
-/** TODO */
+/** Determine the coordinates of the immediate neighbor for a pointed top hex in the specified direction. */
 const determinePointedTopOddRowNeighbor = (
   columnIndex: number,
   rowIndex: number,
@@ -154,7 +154,7 @@ const determinePointedTopOddRowNeighbor = (
   return [columnIndex + diff[0], rowIndex + diff[1]];
 };
 
-/** TODO */
+/** Determine the coordinates of the immediate neighbor for a flat top hex in the specified direction. */
 const determineFlatTopEvenRowNeighbor = (
   columnIndex: number,
   rowIndex: number,
@@ -189,7 +189,7 @@ const determineFlatTopEvenRowNeighbor = (
   return [columnIndex + diff[0], rowIndex + diff[1]];
 };
 
-/** TODO */
+/** Determine the coordinates of the immediate neighbor for a flat top hex in the specified direction. */
 const determineFlatTopOddRowNeighbor = (
   columnIndex: number,
   rowIndex: number,
@@ -264,7 +264,7 @@ export const determineHexNeighborCoordinates = ({
   }
 };
 
-/** TODO */
+/** Given a particular hex, determine the coordinates of all of its immediate neighbors. */
 export const determineHexNeighbors = ({
   columnIndex,
   rowIndex,
@@ -322,17 +322,17 @@ export const determineHexNeighbors = ({
   return neighbors;
 };
 
-/** TODO */
+/** Given the outer radius of a hex (center to outer point), determine the inner diameter of said hex (flat side to flat side). */
 export const determineHexInnerDiameter = (hexRadius: number) => {
   return Math.sqrt(3) * hexRadius;
 };
 
-/** TODO */
+/** Given a specified hex radius, determine a ratio modifier that can be used to size/scale other hex items as need be. */
 export const determineRadiusRatioModifier = (hexRadius: number) => {
   return hexRadius / DEFAULT_HEX_RADIUS;
 };
 
-/** TODO */
+/** Given a provided scale mod ratio, determine the font size for a hex label based on the default font size. */
 export const determineLabelFontSizeByRatio = (ratio: number) => {
   return Math.round(DEFAULT_LABEL_FONT_SIZE * ratio);
 };

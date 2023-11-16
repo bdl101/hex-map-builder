@@ -1,6 +1,6 @@
 import { RefObject } from "react";
 
-/** TODO */
+/** Conver the existing SVG image data and output the image in PNG format. Opens the image in a new tab. */
 export const handleConvertToPNG = (
   hexMapRef: RefObject<SVGSVGElement>,
   maxWidth: number,
@@ -37,7 +37,7 @@ export const handleConvertToPNG = (
   }
 };
 
-/** TODO */
+/** Output the current image in the SVG format. Opens the image in a new tab. */
 export const handleConvertToSVG = (hexMapRef: RefObject<SVGSVGElement>) => {
   const svgElement = hexMapRef.current;
   if (svgElement) {

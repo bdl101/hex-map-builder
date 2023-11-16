@@ -31,7 +31,7 @@ export const prepareHexPath = (vertices: Vertices) => {
   }, `M ${vertices[5][0]} ${vertices[5][1]} `);
 };
 
-/** TODO */
+/** Prepare the render values needed to draw the hex shell for a given hex. */
 export const prepareHexShell = ({
   vertices,
   hexRadius,
@@ -119,7 +119,7 @@ export const prepareHexIcon = ({
   };
 };
 
-/** TODO */
+/** Given a numeric index for a coordinate, convert that number into an alphabetical equivalent. */
 export const convertNumericToAlpha = (numericCoordinate: number) => {
   const letterRepititions = Math.ceil(
     (numericCoordinate + 1) / UPPER_ALPHA_INDICES.length

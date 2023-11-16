@@ -7,21 +7,22 @@ import {
 } from "../models";
 import { deepCopy } from "./deep-copy";
 
-// TODO add console
-
-/** TODO */
+/** Migrating Schema from unversioned to v0.1. */
 export const migrationToVersion01 = (config: HexMapConfig0): HexMapConfig01 => {
+  console.info("Migrating Schema from unversioned to v0.1.");
   return {
     ...config,
     schemaVersion: "0.1",
   };
 };
 
-/** TODO */
+/** Migrating Schema from v0.1 to v1. */
 export const migrationToVersion1 = (config: HexMapConfig0): HexMapConfig => {
+  console.info("Migrating Schema from v0.1 to v1.");
   const { hexOrientation, hexData, ...rest } = config;
 
   const newHexStorage: HexStorage = [];
+  console.log(Object.values(hexData));
   Object.values(hexData).forEach((hex, index) => {
     const newRowIndex = Math.floor(index / rest.columnCount);
     const newColumnIndex = index % rest.columnCount;
@@ -46,10 +47,11 @@ export const migrationToVersion1 = (config: HexMapConfig0): HexMapConfig => {
   };
 };
 
-/** TODO */
+/** Run all migrations needed to get the provided config up to the latest schema version. */
 export const updateConfigToLatestVersion = (
   currentConfig: HexMapConfig0 | HexMapConfig01 | HexMapConfig
 ) => {
+  console.log(currentConfig);
   let configCopy: any = deepCopy(currentConfig);
   while (configCopy.schemaVersion !== CURRENT_CONFIG_SCHEMA_VERSION) {
     switch (configCopy.schemaVersion) {

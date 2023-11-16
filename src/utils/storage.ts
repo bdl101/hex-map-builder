@@ -8,7 +8,7 @@ import {
 import { updateConfigToLatestVersion } from "./migrations";
 import { deepCopy } from "./deep-copy";
 
-/** TODO */
+/** Save the provided config file into both local storage, and local state. */
 export const handleConfigImport = (
   fileList: FileList | null,
   setConfig: Dispatch<SetStateAction<HexMapConfig>>
@@ -16,10 +16,7 @@ export const handleConfigImport = (
   if (fileList) {
     new Response(fileList[0]).json().then(
       (json) => {
-        const config = updateConfigToLatestVersion({
-          ...DEFAULT_HEXMAP_CONFIG,
-          ...json,
-        });
+        const config = updateConfigToLatestVersion(json);
         setConfig(config);
         saveConfigToLocalStorage(config);
       },
@@ -30,21 +27,21 @@ export const handleConfigImport = (
   }
 };
 
-/** TODO */
+/** Prepare a download URL for the config as JSON. */
 export const prepareConfigExportUrl = (config: HexMapConfig) => {
-  URL.createObjectURL(
+  return URL.createObjectURL(
     new Blob([JSON.stringify(config)], {
       type: "application/json",
     })
   );
 };
 
-/** TODO */
+/** Save the provided config object into local storage. */
 export const saveConfigToLocalStorage = (config: HexMapConfig) => {
   localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config));
 };
 
-/** TODO */
+/** Load the config stored in local storage. Ensure the config from storage uses the latest schema version before populating into local state. */
 export const loadConfigFromLocalStorage = () => {
   const configString = localStorage.getItem(CONFIG_STORAGE_KEY);
   if (configString) {
@@ -54,7 +51,7 @@ export const loadConfigFromLocalStorage = () => {
   return DEFAULT_HEXMAP_CONFIG;
 };
 
-/** TODO */
+/** Clear any saved config values from local storage, and reset config values to the defaults. */
 export const clearConfigFromLocalStorage = (
   setConfig: Dispatch<SetStateAction<HexMapConfig>>
 ) => {
@@ -66,7 +63,7 @@ export const clearConfigFromLocalStorage = (
 
 // TODO: move this
 
-/** TODO */
+/** Trim or expand the hex storage based on configuration changes to the row or column count. */
 export const prepareHexStorage = (
   rowCount: number,
   columnCount: number,
