@@ -64,6 +64,8 @@ export const clearConfigFromLocalStorage = (
   }
 };
 
+// TODO: move this
+
 /** TODO */
 export const prepareHexStorage = (
   rowCount: number,

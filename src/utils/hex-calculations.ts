@@ -1,6 +1,5 @@
 import {
   Vertices,
-  HexOrientationOption,
   HexOrientation,
   PointedTopsDirection,
   FlatTopsDirection,
@@ -8,28 +7,6 @@ import {
   DEFAULT_LABEL_FONT_SIZE,
 } from "../models";
 import { ANGLE } from "../models";
-
-/** Get the vertices for a hexagon centered at origin point x,y. The distance between any 2 vertices of the hexagon is 2r. */
-/* export const prepareVertices = (
-  x: number,
-  y: number,
-  r: number,
-  orientation: HexOrientationOption
-) => {
-  const vertices: Vertices = [];
-  for (var i = 0; i < 6; i++) {
-    if (orientation === "pointTop") {
-      const xCoordinate = x + r * Math.sin(ANGLE * i);
-      const yCoordinate = y + r * Math.cos(ANGLE * i);
-      vertices.push([xCoordinate, yCoordinate]);
-    } else {
-      const xCoordinate = x + r * Math.cos(ANGLE * i);
-      const yCoordinate = y + r * Math.sin(ANGLE * i);
-      vertices.push([xCoordinate, yCoordinate]);
-    }
-  }
-  return vertices;
-}; */
 
 /** Get the vertices for a hexagon centered at origin point x,y. The distance between any 2 vertices of the hexagon is 2r. */
 export const prepareVertices = (

@@ -1,14 +1,10 @@
-import { SetStateAction, Dispatch, SVGAttributes } from "react";
+import { SVGAttributes } from "react";
 import {
   Vertices,
   HexLabelData,
   HexMapConfig,
   LabelFormatOption,
-  HexData,
   HexIconData,
-  HexOrientationOption,
-  ANGLE,
-  DEFAULT_HEX_RADIUS,
   TERRAIN_ICON_PROPS_MAP,
   UPPER_ALPHA_INDICES,
   VectorMapItem,
@@ -59,44 +55,6 @@ export const prepareHexShell = ({
     strokeWidth: Math.round(ratio),
   };
 };
-
-/** Given a particular terrain type for a hex, prepare the render props needed for an icon vector path. */
-/* export const prepareHexIcon = (
-  config: HexMapConfig,
-  nodeKey: number,
-  columnOffset: number,
-  rowOffset: number
-): HexIconData => {
-  const terrainType = config.hexData[nodeKey]?.terrainType;
-  if (
-    !config.showHexIcons ||
-    terrainType === undefined ||
-    terrainType === "none"
-  ) {
-    return undefined;
-  }
-  // The original icons paths were measured based on the default hex radius, so if that changed, we need to adjust the coordinates appropriately.
-  const sizeMultitplier = config.hexRadius / DEFAULT_HEX_RADIUS;
-  let counter = 0;
-  const originalPathString = `${TERRAIN_ICON_PROPS_MAP[terrainType].d}`;
-
-  // Find every coordinate in the path draw string, and update the value with the offset from the current hex column/row.
-  const newPathString = originalPathString.replace(
-    /(\d+)+/g,
-    (match, number) => {
-      const updatedCoordinate = `${(
-        parseFloat(number) * sizeMultitplier +
-        (counter % 2 === 0 ? columnOffset : rowOffset)
-      ).toFixed(2)}`;
-      counter++;
-      return updatedCoordinate;
-    }
-  );
-  return {
-    ...TERRAIN_ICON_PROPS_MAP[terrainType],
-    d: newPathString,
-  };
-}; */
 
 /** Given a particular terrain type for a hex, prepare the render props needed for an icon vector path. */
 export const prepareHexIcon = ({
@@ -161,73 +119,20 @@ export const prepareHexIcon = ({
   };
 };
 
-/** Get the vector text data to draw a coordinates label within the provided vertices. */
-/* export const prepareHexLabelData = (
-  vertices: Vertices,
-  columnIndex: number,
-  rowIndex: number,
-  hexRadius: number,
-  labelFormat: LabelFormatOption,
-  hexOrientation: HexOrientationOption
-): HexLabelData => {
-  let formattedLabelString = "";
-
-  if (labelFormat === "none") {
-    return {
-      x: 0,
-      y: 0,
-      label: formattedLabelString,
-    };
-  }
-
-  if (hexOrientation === "pointTop") {
-    const letterRepititions = Math.ceil(
-      (columnIndex + 1) / UPPER_ALPHA_INDICES.length
+/** TODO */
+export const convertNumericToAlpha = (numericCoordinate: number) => {
+  const letterRepititions = Math.ceil(
+    (numericCoordinate + 1) / UPPER_ALPHA_INDICES.length
+  );
+  console.log(letterRepititions);
+  let alphaXString = "";
+  for (let i = 0; i < letterRepititions; i++) {
+    alphaXString += String.fromCharCode(
+      UPPER_ALPHA_INDICES[numericCoordinate % UPPER_ALPHA_INDICES.length]
     );
-    let alphaXString = "";
-    for (let i = 0; i < letterRepititions; i++) {
-      alphaXString += String.fromCharCode(
-        UPPER_ALPHA_INDICES[columnIndex % UPPER_ALPHA_INDICES.length]
-      );
-    }
-    if (labelFormat === "alphaX") {
-      formattedLabelString = `${alphaXString}${rowIndex}`;
-    } else if (labelFormat === "numbersOnly") {
-      formattedLabelString = `${columnIndex},${rowIndex}`;
-    }
-    return {
-      x: vertices[4][0] + hexRadius / 10,
-      y: vertices[4][1] + hexRadius / 5,
-      label: formattedLabelString,
-    };
-  } else {
-    const letterRepititions = Math.ceil(
-      ((columnIndex + 1) * 2) / UPPER_ALPHA_INDICES.length
-    );
-    let alphaXString = "";
-    for (let i = 0; i < letterRepititions; i++) {
-      alphaXString += String.fromCharCode(
-        UPPER_ALPHA_INDICES[
-          rowIndex % 2 === 0
-            ? (columnIndex * 2) % UPPER_ALPHA_INDICES.length
-            : (columnIndex * 2 + 1) % UPPER_ALPHA_INDICES.length
-        ]
-      );
-    }
-    if (labelFormat === "alphaX") {
-      formattedLabelString = `${alphaXString}${Math.floor(rowIndex / 2)}`;
-    } else if (labelFormat === "numbersOnly") {
-      formattedLabelString = `${
-        rowIndex % 2 === 0 ? columnIndex * 2 : columnIndex * 2 + 1
-      },${Math.floor(rowIndex / 2)}`;
-    }
-    return {
-      x: vertices[4][0] + hexRadius / 100,
-      y: vertices[4][1] + hexRadius / 4,
-      label: formattedLabelString,
-    };
   }
-}; */
+  return alphaXString;
+};
 
 /** Get the vector text data to draw a coordinates label within the provided vertices. */
 export const prepareHexLabelData = ({
@@ -253,11 +158,14 @@ export const prepareHexLabelData = ({
   }
   const { xCoordinate, yCoordinate } = originPoint;
 
-  // TODO: alphaX coordinates
-
   const hexInnerDiameter = determineHexInnerDiameter(hexRadius);
   const ratio = determineRadiusRatioModifier(hexRadius);
   const fontSize = determineLabelFontSizeByRatio(ratio);
+
+  const labelText =
+    labelFormat === "numbersOnly"
+      ? `${columnIndex},${rowIndex}`
+      : `${convertNumericToAlpha(columnIndex)},${rowIndex}`;
 
   if (
     hexOrientation === "pointedTopOddRow" ||
@@ -265,44 +173,19 @@ export const prepareHexLabelData = ({
   ) {
     const xOffset = Math.round(ratio * 3);
     return {
-      text: `${columnIndex},${rowIndex}`,
+      text: labelText,
       x: xCoordinate + xOffset - hexInnerDiameter / 2,
       y: yCoordinate + fontSize - hexRadius / 2,
     };
   } else {
     const xOffset = Math.round(ratio);
     return {
-      text: `${columnIndex},${rowIndex}`,
+      text: labelText,
       x: xCoordinate + xOffset - hexRadius / 2,
       y: yCoordinate + fontSize - hexInnerDiameter / 2,
     };
   }
 };
-
-/** Given a set of configurations, prepare the viewbox size for the hex map. */
-/* export const prepareViewbox = (config: HexMapConfig) => {
-  const { rowCount, columnCount, hexRadius, hexOrientation } = config;
-  if (hexOrientation === "pointTop") {
-    const columnOffset = hexRadius - hexRadius * Math.sin(ANGLE);
-    const maxWidth =
-      2 * columnCount * hexRadius -
-      columnCount * 2 * columnOffset +
-      columnOffset +
-      (hexRadius - columnOffset) +
-      1;
-    const maxHeight = hexRadius / 2 + 1.5 * rowCount * hexRadius;
-    return { maxWidth, maxHeight, viewBox: `0 0 ${maxWidth} ${maxHeight}` };
-  } else {
-    const rowOffset = hexRadius - hexRadius * Math.sin(ANGLE);
-    const maxWidth = 3.25 * hexRadius * columnCount;
-    const maxHeight =
-      2 * hexRadius -
-      2 * rowOffset +
-      (rowCount - 1) * (hexRadius - rowOffset) +
-      2;
-    return { maxWidth, maxHeight, viewBox: `0 0 ${maxWidth} ${maxHeight}` };
-  }
-}; */
 
 /** Given a set of configurations, prepare the viewbox size for the hex map. */
 export const prepareViewboxValues = (
@@ -330,96 +213,6 @@ export const prepareViewboxValues = (
   }
   return { maxWidth, maxHeight, viewboxString: `0 0 ${maxWidth} ${maxHeight}` };
 };
-
-/** Get all vector data needed to output a hexmap. */
-/* export const prepareVectorData = (
-  config: HexMapConfig
-): {
-  paths: string[];
-  icons: HexIconData[];
-  labelData: HexLabelData[];
-} => {
-  const { rowCount, columnCount, hexRadius, labelFormat, hexOrientation } =
-    config;
-
-  const paths: string[] = [];
-  const icons: HexIconData[] = [];
-  const labelData: HexLabelData[] = [];
-
-  let currentHexIndex = 0;
-
-  for (let j = 0; j < rowCount; j++) {
-    let columnOffset = 0;
-    let rowOffset = 0;
-    let xCoordinate = 0;
-    let yCoordinate = 0;
-
-    if (hexOrientation === "pointTop") {
-      columnOffset = hexRadius - hexRadius * Math.sin(ANGLE);
-      yCoordinate = hexRadius + 1.5 * j * hexRadius;
-    } else {
-      rowOffset = hexRadius - hexRadius * Math.sin(ANGLE);
-      columnOffset = j % 2 !== 0 ? 1.5 * hexRadius : 0;
-      yCoordinate = hexRadius * (j + 1) - (j + 1) * rowOffset;
-    }
-    for (let i = 0; i < columnCount; i++) {
-      if (hexOrientation === "pointTop") {
-        xCoordinate =
-          hexRadius +
-          2 * i * hexRadius -
-          2 * i * columnOffset +
-          (j % 2) * (hexRadius - columnOffset);
-      } else {
-        xCoordinate =
-          columnOffset +
-          hexRadius +
-          hexRadius * i * 2 +
-          hexRadius * Math.cos(ANGLE) * i * 2;
-      }
-
-      const vertices = prepareVertices(
-        xCoordinate,
-        yCoordinate,
-        hexRadius,
-        hexOrientation
-      );
-      const path = prepareHexPath(vertices);
-      const icon =
-        hexOrientation === "pointTop"
-          ? prepareHexIcon(
-              config,
-              currentHexIndex,
-              2 * i * hexRadius -
-                2 * i * columnOffset +
-                (j % 2) * (hexRadius - columnOffset),
-              1.5 * j * hexRadius
-            )
-          : prepareHexIcon(
-              config,
-              currentHexIndex,
-              columnOffset +
-                hexRadius * i * 2 +
-                hexRadius * Math.cos(ANGLE) * i * 2,
-              hexRadius * (j + 1) - (j + 1) * rowOffset - hexRadius
-            );
-      const labelDataPoint = prepareHexLabelData(
-        vertices,
-        i,
-        j,
-        hexRadius,
-        labelFormat,
-        hexOrientation
-      );
-
-      paths.push(path);
-      icons.push(icon);
-      labelData.push(labelDataPoint);
-      currentHexIndex++;
-    }
-  }
-
-  return { paths, icons, labelData };
-}; */
 
 /** Given a set of configurations, prepare the viewbox size for the hex map. */
 export const prepareVectorMapData = ({

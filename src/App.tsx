@@ -1,7 +1,7 @@
 import { useMemo, useState, useRef } from "react";
 import { Global } from "@emotion/react";
 
-import { HexMapConfig, TERRAIN_HEX_COLOR_MAP } from "./models";
+import { HexMapConfig } from "./models";
 import {
   determineLabelFontSizeByRatio,
   determineRadiusRatioModifier,
@@ -19,14 +19,6 @@ import { ControlsDrawer, ControlsDrawerToggle } from "./components";
 import { GLOBAL_STYLES, MainContainer, MapContainer } from "./App.styles";
 
 const INITIAL_CONFIG = loadConfigFromLocalStorage();
-
-/* const hexStorage = prepareHexStorage(
-  DEFAULT_HEXMAP_CONFIG2.rowCount,
-  DEFAULT_HEXMAP_CONFIG2.columnCount,
-  DEFAULT_HEXMAP_CONFIG2.hexStorage
-);
-const mapData = prepareVectorMapData({ ...DEFAULT_HEXMAP_CONFIG2, hexStorage });
-const viewboxValues = prepareViewboxValues(DEFAULT_HEXMAP_CONFIG2); */
 
 const App = () => {
   const hexMapRef = useRef<SVGSVGElement>(null);
@@ -53,10 +45,7 @@ const App = () => {
     configKey: K,
     newValue: HexMapConfig[K]
   ) => {
-    // TODO: update hex storage on row or col change
     const newConfig = { ...config, [configKey]: newValue };
-
-    console.log(newConfig.rowCount, newConfig.columnCount);
 
     if (configKey === "columnCount" || configKey === "rowCount") {
       newConfig.hexStorage = prepareHexStorage(
@@ -96,81 +85,6 @@ const App = () => {
             setIsPointerDown(false);
           }}
         >
-          {/* <svg
-            ref={hexMapRef}
-            viewBox={mapDimensions.viewBox}
-            width={
-              config.imageFormat === "fixed"
-                ? mapDimensions.maxWidth
-                : undefined
-            }
-            height={
-              config.imageFormat === "fixed"
-                ? mapDimensions.maxHeight
-                : undefined
-            }
-            style={{ fontSize: "12px", fontFamily: "sans-serif" }}
-          >
-            {paths.map((path, index) => {
-              const terrainType = config.hexData[index]?.terrainType;
-              let hexFillColor = "transparent";
-              if (terrainType !== undefined && config.useTerrainColors) {
-                hexFillColor = TERRAIN_HEX_COLOR_MAP[terrainType];
-              }
-              return (
-                <g key={index}>
-                  <path
-                    d={path}
-                    fill={hexFillColor}
-                    stroke="#000"
-                    strokeWidth="1"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      handleHexPress({
-                        hexKey: index,
-                        isPointerDown,
-                        setIsPointerDown,
-                        config,
-                        setConfig,
-                      });
-                    }}
-                    onMouseOver={(e) => {
-                      e.preventDefault();
-                      handleHexDrag({
-                        hexKey: index,
-                        isPointerDown,
-                        config,
-                        setConfig,
-                      });
-                    }}
-                    onTouchStart={(e) => {
-                      e.preventDefault();
-                      handleHexPress({
-                        hexKey: index,
-                        isPointerDown,
-                        setIsPointerDown,
-                        config,
-                        setConfig,
-                      });
-                    }}
-                    onTouchMove={(e) => {
-                      e.preventDefault();
-                      handleHexDrag({
-                        hexKey: index,
-                        isPointerDown,
-                        config,
-                        setConfig,
-                      });
-                    }}
-                  />
-                  {icons[index] && <path {...icons[index]} />}
-                  <text x={labelData[index].x} y={labelData[index].y}>
-                    {labelData[index].label}
-                  </text>
-                </g>
-              );
-            })}
-          </svg> */}
           <svg
             ref={hexMapRef}
             viewBox={viewboxValues.viewboxString}
@@ -205,6 +119,25 @@ const App = () => {
                       });
                     }}
                     onMouseOver={(e) => {
+                      e.preventDefault();
+                      handleHexDrag({
+                        hexKey: [columnIndex, rowIndex],
+                        isPointerDown,
+                        config,
+                        setConfig,
+                      });
+                    }}
+                    onTouchStart={(e) => {
+                      e.preventDefault();
+                      handleHexPress({
+                        hexKey: [columnIndex, rowIndex],
+                        isPointerDown,
+                        setIsPointerDown,
+                        config,
+                        setConfig,
+                      });
+                    }}
+                    onTouchMove={(e) => {
                       e.preventDefault();
                       handleHexDrag({
                         hexKey: [columnIndex, rowIndex],

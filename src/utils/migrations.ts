@@ -7,6 +7,8 @@ import {
 } from "../models";
 import { deepCopy } from "./deep-copy";
 
+// TODO add console
+
 /** TODO */
 export const migrationToVersion01 = (config: HexMapConfig0): HexMapConfig01 => {
   return {
