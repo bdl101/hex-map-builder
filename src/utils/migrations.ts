@@ -22,7 +22,6 @@ export const migrationToVersion1 = (config: HexMapConfig0): HexMapConfig => {
   const { hexOrientation, hexData, ...rest } = config;
 
   const newHexStorage: HexStorage = [];
-  console.log(Object.values(hexData));
   Object.values(hexData).forEach((hex, index) => {
     const newRowIndex = Math.floor(index / rest.columnCount);
     const newColumnIndex = index % rest.columnCount;
@@ -51,7 +50,6 @@ export const migrationToVersion1 = (config: HexMapConfig0): HexMapConfig => {
 export const updateConfigToLatestVersion = (
   currentConfig: HexMapConfig0 | HexMapConfig01 | HexMapConfig
 ) => {
-  console.log(currentConfig);
   let configCopy: any = deepCopy(currentConfig);
   while (configCopy.schemaVersion !== CURRENT_CONFIG_SCHEMA_VERSION) {
     switch (configCopy.schemaVersion) {

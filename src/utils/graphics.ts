@@ -124,7 +124,6 @@ export const convertNumericToAlpha = (numericCoordinate: number) => {
   const letterRepititions = Math.ceil(
     (numericCoordinate + 1) / UPPER_ALPHA_INDICES.length
   );
-  console.log(letterRepititions);
   let alphaXString = "";
   for (let i = 0; i < letterRepititions; i++) {
     alphaXString += String.fromCharCode(
